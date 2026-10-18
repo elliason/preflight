@@ -26,6 +26,9 @@
           # Hegel's engine bootstrap needs network; mandatory in devenv CI.
           doCheck = false;
           nativeBuildInputs = [ pkgs.makeWrapper ];
+          preBuild = ''
+            export NIX_RUSTFLAGS="''${NIX_RUSTFLAGS:-} --remap-path-prefix=$NIX_BUILD_TOP=/build"
+          '';
           postInstall = ''
             install -Dm644 LICENSE $out/share/licenses/preflight/LICENSE
             install -Dm644 vendor/gitleaks/LICENSE $out/share/licenses/preflight/gitleaks-LICENSE
