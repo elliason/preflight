@@ -76,6 +76,16 @@ struct Config {
     upstream_entropy: bool,
     max_body_bytes: usize,
     request_timeout_secs: u64,
+    anthropic_upstream_auth: AnthropicUpstreamAuth,
+}
+
+#[derive(Clone, Copy, Default, Debug, Deserialize, PartialEq, Eq)]
+enum AnthropicUpstreamAuth {
+    #[default]
+    #[serde(rename = "x-api-key")]
+    XApiKey,
+    #[serde(rename = "bearer")]
+    Bearer,
 }
 impl Default for Config {
     fn default() -> Self {
@@ -106,6 +116,7 @@ impl Default for Config {
             upstream_entropy: false,
             max_body_bytes: 64 * 1024 * 1024,
             request_timeout_secs: 180,
+            anthropic_upstream_auth: AnthropicUpstreamAuth::default(),
         }
     }
 }
@@ -551,12 +562,16 @@ fn anthropic_authorized(app: &App, headers: &HeaderMap) -> bool {
 /// @cc [owner:ghuntley,label:security] native-authentication-boundary
 /// A configured local key MUST NOT be forwarded upstream. Anthropic requests
 /// MUST send at most one authentication mechanism, including pass-through mode.
+/// Replacement credentials MUST use the form validated by configuration parsing.
 fn anthropic_upstream_auth(
     app: &App,
     headers: &HeaderMap,
 ) -> Result<Option<(&'static str, axum::http::HeaderValue)>> {
     if let Some(key) = &app.upstream_key {
-        return Ok(Some(("x-api-key", key.parse()?)));
+        return Ok(Some(match app.config.anthropic_upstream_auth {
+            AnthropicUpstreamAuth::XApiKey => ("x-api-key", key.parse()?),
+            AnthropicUpstreamAuth::Bearer => ("authorization", format!("Bearer {key}").parse()?),
+        }));
     }
     anyhow::ensure!(app.client_key.is_none(), "upstream_configuration");
     let (bearer, api_key) = native_credentials(headers)?;

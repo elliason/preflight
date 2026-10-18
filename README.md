@@ -97,6 +97,7 @@ preflight serve --config /path/to/config.toml
 | `bind` | `127.0.0.1:8081` | listen address |
 | `upstream` | `http://127.0.0.1:8080` | underclass base URL, without `/v1` |
 | `mode` | `redact` | enforcement policy |
+| `anthropic_upstream_auth` | `x-api-key` | replacement credential form on native routes: `x-api-key` or `bearer`; other values reject at load/reload |
 | `sandbox` | `true` | isolate attachment workers with Bubblewrap |
 | `allow_page_redaction` | `false` | permit blacking out a PDF page when a finding cannot be mapped to an OCR region |
 | `max_body_bytes` | `67108864` | maximum request body size: 64 MiB |
@@ -130,7 +131,7 @@ Runtime environment:
 |---|---|
 | `PREFLIGHT_CONFIG` | configuration path for `serve` |
 | `PREFLIGHT_CLIENT_KEY` | optional local credential: bearer on OpenAI routes; bearer or `x-api-key` on Anthropic routes |
-| `PREFLIGHT_UPSTREAM_KEY` | optional replacement credential: bearer on OpenAI routes, `x-api-key` on Anthropic routes |
+| `PREFLIGHT_UPSTREAM_KEY` | optional replacement credential: bearer on OpenAI routes; configured `anthropic_upstream_auth` form on Anthropic routes |
 | `PREFLIGHT_FILE_API_KEY` | separate credential for the configured file API |
 | `PREFLIGHT_CONTROL` | socket path for cache administration commands |
 | `RUST_LOG` | logging filter; output is structured JSON |
@@ -201,7 +202,8 @@ credentials reject. When a local key is configured, an upstream key is required:
 Configuration load and reload reject a missing replacement and empty or invalid
 `PREFLIGHT_CLIENT_KEY` / `PREFLIGHT_UPSTREAM_KEY` header values. This also rejects the previously accepted OpenAI-only setup
 that forwarded the local bearer key upstream. The local credential is stripped
-and the replacement is sent only as `x-api-key` on Anthropic routes.
+and the replacement uses `anthropic_upstream_auth`: `x-api-key` (default) or
+`bearer`. Unknown auth forms reject during configuration load/reload.
 With neither key configured, one native credential can pass through. OpenAI
 routes retain their existing authentication, document walker, and query-discard
 behavior for valid configurations. Model discovery remains bearer-only with

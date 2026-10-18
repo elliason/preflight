@@ -47,7 +47,7 @@ struct Captured {
 }
 const SSE: &[u8] = b"event: message_start\ndata: {\"type\":\"message_start\"}\n\nevent: future_event\ndata: {\"unknown\":true}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n";
 
-async fn anthropic_path(adapter: Adapter) {
+async fn anthropic_path(adapter: Adapter, upstream_auth: AnthropicUpstreamAuth) {
     let response_bytes: &'static [u8] = if adapter == Adapter::Messages {
         SSE
     } else {
@@ -85,12 +85,14 @@ async fn anthropic_path(adapter: Adapter) {
     let upstream_address = listener.local_addr().unwrap();
     let upstream_task = tokio::spawn(async move { axum::serve(listener, upstream).await.unwrap() });
     let temp = tempfile::tempdir().unwrap();
+    let mut runtime = app(
+        temp.path(),
+        format!("http://{upstream_address}"),
+        Mode::Redact,
+    );
+    runtime.config.anthropic_upstream_auth = upstream_auth;
     let live = Arc::new(Live {
-        current: RwLock::new(Arc::new(app(
-            temp.path(),
-            format!("http://{upstream_address}"),
-            Mode::Redact,
-        ))),
+        current: RwLock::new(Arc::new(runtime)),
     });
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
@@ -134,8 +136,16 @@ async fn anthropic_path(adapter: Adapter) {
                 Some("beta=true")
             }
         );
-        assert_eq!(sent.headers["x-api-key"], "upstream-fixture-key");
-        assert!(!sent.headers.contains_key("authorization"));
+        match upstream_auth {
+            AnthropicUpstreamAuth::XApiKey => {
+                assert_eq!(sent.headers["x-api-key"], "upstream-fixture-key");
+                assert!(!sent.headers.contains_key("authorization"));
+            }
+            AnthropicUpstreamAuth::Bearer => {
+                assert_eq!(sent.headers["authorization"], "Bearer upstream-fixture-key");
+                assert!(!sent.headers.contains_key("x-api-key"));
+            }
+        }
         assert_eq!(sent.headers["anthropic-version"], "2023-06-01");
         assert_eq!(sent.headers["anthropic-beta"], "fixture-beta-2026-10-18");
         let forwarded = std::str::from_utf8(&sent.body).unwrap();
@@ -257,11 +267,11 @@ async fn anthropic_path(adapter: Adapter) {
 }
 #[tokio::test]
 async fn messages_inspect_every_input_before_streaming_or_reject_without_forwarding() {
-    anthropic_path(Adapter::Messages).await;
+    anthropic_path(Adapter::Messages, AnthropicUpstreamAuth::XApiKey).await;
 }
 #[tokio::test]
 async fn count_tokens_inspects_every_input_before_counting_or_rejects_without_forwarding() {
-    anthropic_path(Adapter::CountTokens).await;
+    anthropic_path(Adapter::CountTokens, AnthropicUpstreamAuth::XApiKey).await;
 }
 
 #[hegel::test]
@@ -695,4 +705,34 @@ fn matrix_approved_bytes_never_contain_an_injected_leaf_canary(tc: hegel::TestCa
             }
         }
     }
+}
+
+#[tokio::test]
+async fn native_messages_and_counts_support_bearer_upstream_auth() {
+    anthropic_path(Adapter::Messages, AnthropicUpstreamAuth::Bearer).await;
+    anthropic_path(Adapter::CountTokens, AnthropicUpstreamAuth::Bearer).await;
+}
+
+#[test]
+fn upstream_auth_form_is_validated_at_configuration_load() {
+    for (value, expected) in [
+        ("x-api-key", AnthropicUpstreamAuth::XApiKey),
+        ("bearer", AnthropicUpstreamAuth::Bearer),
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("fixture.toml");
+        std::fs::write(&path, format!("anthropic_upstream_auth = \"{value}\"\n")).unwrap();
+        assert_eq!(load(Some(path)).unwrap().anthropic_upstream_auth, expected);
+    }
+    for value in ["basic", "Bearer", "", "x_api_key"] {
+        assert!(
+            toml::from_str::<Config>(&format!("anthropic_upstream_auth = \"{value}\"")).is_err()
+        );
+    }
+    assert_eq!(
+        toml::from_str::<Config>("")
+            .unwrap()
+            .anthropic_upstream_auth,
+        AnthropicUpstreamAuth::XApiKey
+    );
 }
