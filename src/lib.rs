@@ -1,3 +1,4 @@
+pub mod anthropic;
 pub mod attachments;
 pub mod cache;
 pub mod correlation;

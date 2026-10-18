@@ -1,5 +1,5 @@
 //! Closed protocol declarations. Adapters classify; the shared core inspects.
-use crate::document;
+use crate::{anthropic, document};
 use anyhow::Result;
 use axum::http::Uri;
 use serde_json::Value;
@@ -8,10 +8,13 @@ use serde_json::Value;
 pub enum Adapter {
     Responses,
     ChatCompletions,
+    Messages,
+    CountTokens,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Family {
     OpenAi,
+    Anthropic,
 }
 #[derive(Clone, Copy, Debug)]
 pub struct RouteSpec {
@@ -22,8 +25,11 @@ pub struct RouteSpec {
 impl RouteSpec {
     pub fn target(self, uri: &Uri) -> Result<String> {
         anyhow::ensure!(uri.path() == self.path, "invalid_route");
-        // Both legacy routes deliberately discard query strings.
-        Ok(self.path.into())
+        match (self.family, uri.query()) {
+            (Family::OpenAi, _) | (Family::Anthropic, None) => Ok(self.path.into()),
+            (Family::Anthropic, Some("beta=true")) => Ok(format!("{}?beta=true", self.path)),
+            _ => anyhow::bail!("invalid_query"),
+        }
     }
 
     pub fn classify(self, bytes: &[u8]) -> Result<InspectionPlan> {
@@ -34,24 +40,28 @@ impl RouteSpec {
                 body,
                 content: Content::Legacy,
             }),
+            Adapter::Messages | Adapter::CountTokens => anthropic::classify(body),
         }
     }
 }
 impl Adapter {
     pub fn route(self) -> RouteSpec {
-        let path = match self {
-            Self::Responses => "/v1/responses",
-            Self::ChatCompletions => "/v1/chat/completions",
+        let (path, family) = match self {
+            Self::Responses => ("/v1/responses", Family::OpenAi),
+            Self::ChatCompletions => ("/v1/chat/completions", Family::OpenAi),
+            Self::Messages => ("/v1/messages", Family::Anthropic),
+            Self::CountTokens => ("/v1/messages/count_tokens", Family::Anthropic),
         };
         RouteSpec {
             adapter: self,
             path,
-            family: Family::OpenAi,
+            family,
         }
     }
 }
 
 /// A plan owns the classified body: callers cannot substitute unclassified data.
+/// Object keys and array indices form structural paths, never JSONPath strings.
 #[derive(Debug)]
 pub struct InspectionPlan {
     pub(crate) body: Value,
@@ -60,4 +70,14 @@ pub struct InspectionPlan {
 #[derive(Debug)]
 pub enum Content {
     Legacy,
+    EditableText,
+    JsonText(Box<InspectionPlan>),
+    Structural,
+    Object(Vec<(String, Content)>),
+    Array(Vec<Content>),
+    TextBlocks(Vec<Content>),
+    SignedGroup,
+    OpaqueGroup,
+    Attachment,
+    Unsupported,
 }

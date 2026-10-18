@@ -431,28 +431,262 @@ pub async fn inspect_plan(
     scope: &str,
     sanitize: bool,
 ) -> Result<(Inspection, bool)> {
-    match plan.content {
-        crate::protocol::Content::Legacy => {
-            let materialized = resolver
-                .materialize(&mut plan.body)
-                .await
-                .map_err(|_| anyhow::anyhow!(PlanError::Acquisition))?;
-            let mut inspection = inspect(plan.body, scanner, attachments, scope, sanitize).await?;
-            inspection.changed |= materialized;
-            Ok((inspection, materialized))
-        }
+    use crate::protocol::Content;
+    if matches!(plan.content, Content::Legacy) {
+        let materialized = resolver
+            .materialize(&mut plan.body)
+            .await
+            .map_err(|_| anyhow::anyhow!(PlanError::Acquisition))?;
+        let mut inspection = inspect(plan.body, scanner, attachments, scope, sanitize).await?;
+        inspection.changed |= materialized;
+        return Ok((inspection, materialized));
     }
+    // This bounds CPU scans, including scans that outlive a cancelled request.
+    // Text-only requests share the budget even though they need no attachments.
+    let permit = attachments.scan_slots.clone().acquire_owned().await?;
+    let scanner = scanner.clone();
+    tokio::task::spawn_blocking(move || {
+        let _permit = permit;
+        inspect_classified(plan, &scanner).map(|result| (result, false))
+    })
+    .await?
 }
 
 #[derive(Debug)]
 pub enum PlanError {
+    Unsupported,
     Acquisition,
 }
 impl std::fmt::Display for PlanError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
+            Self::Unsupported => "unsupported_content",
             Self::Acquisition => "attachment_resolution_failed",
         })
     }
 }
 impl std::error::Error for PlanError {}
+
+pub fn inspect_classified(
+    plan: crate::protocol::InspectionPlan,
+    scanner: &Scanner,
+) -> Result<Inspection> {
+    let mut result = Inspection {
+        body: Value::Null,
+        rules: vec![],
+        changed: false,
+        unsafe_findings: false,
+    };
+    let mut body = plan.body;
+    scan_content(&mut body, plan.content, scanner, &mut result, 0)?;
+    result.body = body;
+    Ok(result)
+}
+
+fn scan_control(
+    value: &Value,
+    scanner: &Scanner,
+    result: &mut Inspection,
+    depth: usize,
+) -> Result<()> {
+    if depth > 64 {
+        bail!("nesting_limit");
+    }
+    match value {
+        Value::String(text) => scan_key(text, scanner, result),
+        Value::Object(values) => {
+            for (key, value) in values {
+                scan_key(key, scanner, result);
+                scan_control(value, scanner, result, depth + 1)?;
+            }
+        }
+        Value::Array(values) => {
+            for value in values {
+                scan_control(value, scanner, result, depth + 1)?;
+            }
+        }
+        _ => {}
+    }
+    if result.rules.len() > 10_000 {
+        bail!("finding_limit");
+    }
+    Ok(())
+}
+fn scan_key(text: &str, scanner: &Scanner, result: &mut Inspection) {
+    let findings = scanner.scan(text);
+    result.unsafe_findings |= !findings.is_empty();
+    result
+        .rules
+        .extend(findings.into_iter().map(|finding| finding.rule));
+}
+
+/// @cc [owner:ghuntley,label:security] signed-group-integrity
+/// Signed groups MUST remain unchanged. Any finding in a signed group MUST
+/// prevent approval in enforcing modes; advisory MUST preserve original bytes.
+/// Opaque content MUST reject in every mode.
+fn scan_content(
+    value: &mut Value,
+    content: crate::protocol::Content,
+    scanner: &Scanner,
+    result: &mut Inspection,
+    depth: usize,
+) -> Result<()> {
+    use crate::protocol::Content;
+    if depth > 64 {
+        bail!("nesting_limit");
+    }
+    match content {
+        Content::EditableText => {
+            let text = value
+                .as_str()
+                .ok_or_else(|| anyhow::anyhow!("plan_mismatch"))?;
+            let (replacement, findings) = scanner.redact(text);
+            if !findings.is_empty() {
+                *value = replacement.into();
+                result.changed = true;
+                result
+                    .rules
+                    .extend(findings.into_iter().map(|finding| finding.rule));
+            }
+        }
+        Content::Structural => scan_control(value, scanner, result, depth)?,
+        Content::SignedGroup => scan_control(value, scanner, result, depth)?,
+        Content::JsonText(plan) => {
+            let mut inner = plan.body;
+            let mut nested = Inspection {
+                body: Value::Null,
+                rules: vec![],
+                changed: false,
+                unsafe_findings: false,
+            };
+            scan_content(&mut inner, plan.content, scanner, &mut nested, depth + 1)?;
+            if nested.changed {
+                *value = serde_json::to_string(&inner)?.into();
+                result.changed = true;
+            }
+            result.rules.extend(nested.rules);
+            result.unsafe_findings |= nested.unsafe_findings;
+        }
+        Content::Object(fields) => {
+            let values = value
+                .as_object_mut()
+                .ok_or_else(|| anyhow::anyhow!("plan_mismatch"))?;
+            anyhow::ensure!(values.len() == fields.len(), "plan_mismatch");
+            for (key, content) in fields {
+                scan_key(&key, scanner, result);
+                let value = values
+                    .get_mut(&key)
+                    .ok_or_else(|| anyhow::anyhow!("plan_mismatch"))?;
+                scan_content(value, content, scanner, result, depth + 1)?;
+            }
+        }
+        Content::Array(parts) => scan_array(value, parts, scanner, result, depth, false)?,
+        Content::TextBlocks(parts) => scan_array(value, parts, scanner, result, depth, true)?,
+        Content::Unsupported | Content::OpaqueGroup | Content::Attachment => {
+            return Err(PlanError::Unsupported.into());
+        }
+        Content::Legacy => bail!("legacy_plan_requires_acquisition"),
+    }
+    if result.rules.len() > 10_000 {
+        bail!("finding_limit");
+    }
+    Ok(())
+}
+fn scan_array(
+    value: &mut Value,
+    parts: Vec<crate::protocol::Content>,
+    scanner: &Scanner,
+    result: &mut Inspection,
+    depth: usize,
+    reconstruct: bool,
+) -> Result<()> {
+    let values = value
+        .as_array_mut()
+        .ok_or_else(|| anyhow::anyhow!("plan_mismatch"))?;
+    anyhow::ensure!(values.len() == parts.len(), "plan_mismatch");
+    if reconstruct {
+        reconstruct_native_parts(values, scanner, &mut result.rules, &mut result.changed)?;
+    }
+    for (value, content) in values.iter_mut().zip(parts) {
+        scan_content(value, content, scanner, result, depth + 1)?;
+    }
+    Ok(())
+}
+
+// Anthropic text blocks can split a credential inside a fixed prefix. Scan their
+// exact concatenation as well as the legacy line-oriented reconstruction. Build
+// all spans from the original values before applying any replacement.
+fn reconstruct_native_parts(
+    parts: &mut [Value],
+    scanner: &Scanner,
+    rules: &mut Vec<String>,
+    changed: &mut bool,
+) -> Result<()> {
+    for run in parts.chunk_by_mut(|a, b| {
+        a.get("text").is_some_and(Value::is_string) && b.get("text").is_some_and(Value::is_string)
+    }) {
+        if run[0].get("text").is_some_and(Value::is_string) {
+            reconstruct_native_run(run, scanner, rules, changed)?;
+        }
+    }
+    Ok(())
+}
+
+fn reconstruct_native_run(
+    parts: &mut [Value],
+    scanner: &Scanner,
+    rules: &mut Vec<String>,
+    changed: &mut bool,
+) -> Result<()> {
+    let mut mapped: Vec<Vec<(usize, usize, String)>> = vec![vec![]; parts.len()];
+    for separator in ["", "\n"] {
+        let mut text = String::new();
+        let mut sources = vec![];
+        for (index, part) in parts.iter().enumerate() {
+            if let Some(value) = part.get("text").and_then(Value::as_str) {
+                if !text.is_empty() {
+                    text.push_str(separator);
+                }
+                let start = text.len();
+                text.push_str(value);
+                sources.push((index, start, text.len()));
+            }
+        }
+        if text.len() > 64 * 1024 * 1024 {
+            bail!("reconstruction_limit");
+        }
+        for finding in scanner.scan(&text) {
+            for &(index, start, end) in &sources {
+                if finding.start < end && finding.end > start {
+                    mapped[index].push((
+                        finding.start.max(start) - start,
+                        finding.end.min(end) - start,
+                        finding.rule.clone(),
+                    ));
+                }
+            }
+        }
+    }
+    for (part, mut spans) in parts.iter_mut().zip(mapped) {
+        spans.sort();
+        spans.dedup();
+        let mut merged: Vec<(usize, usize, String)> = vec![];
+        for span in spans {
+            if let Some(last) = merged.last_mut()
+                && span.0 < last.1
+            {
+                last.1 = last.1.max(span.1);
+            } else {
+                merged.push(span);
+            }
+        }
+        if let Some(Value::String(text)) = part.get_mut("text") {
+            for (start, end, rule) in merged.into_iter().rev() {
+                text.replace_range(start..end, &format!("[REDACTED:{rule}]"));
+                rules.push(rule);
+                *changed = true;
+            }
+        }
+    }
+    Ok(())
+}

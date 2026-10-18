@@ -145,9 +145,29 @@ fn load(path: Option<PathBuf>) -> Result<Config> {
         c.max_body_bytes > 0 && c.max_body_bytes <= 64 * 1024 * 1024 && c.request_timeout_secs > 0,
         "invalid limits"
     );
+    validate_auth_configuration(
+        std::env::var("PREFLIGHT_CLIENT_KEY").ok().as_deref(),
+        std::env::var("PREFLIGHT_UPSTREAM_KEY").ok().as_deref(),
+    )?;
     Ok(c)
 }
 
+/// @cc [owner:ghuntley,label:security] authentication-configuration
+/// Load and reload MUST reject a local client key without a usable upstream key
+/// before publishing a runtime that could fail native authentication forwarding.
+fn validate_auth_configuration(client_key: Option<&str>, upstream_key: Option<&str>) -> Result<()> {
+    anyhow::ensure!(
+        client_key.is_none() || upstream_key.is_some(),
+        "a local client key requires an upstream key"
+    );
+    for key in [client_key, upstream_key].into_iter().flatten() {
+        anyhow::ensure!(
+            !key.is_empty() && key.parse::<axum::http::HeaderValue>().is_ok(),
+            "invalid authentication configuration"
+        );
+    }
+    Ok(())
+}
 fn scanner(config: &Config) -> Result<Scanner> {
     let hashes = match &config.carnet {
         Some(p) => {
@@ -337,6 +357,14 @@ fn router(live: Arc<Live>) -> Router {
             "/v1/chat/completions",
             post(|s, r| infer(s, r, Adapter::ChatCompletions)),
         )
+        .route(
+            "/v1/messages",
+            post(|s, r| infer(s, r, Adapter::Messages)).fallback(anthropic_method_not_allowed),
+        )
+        .route(
+            "/v1/messages/count_tokens",
+            post(|s, r| infer(s, r, Adapter::CountTokens)).fallback(anthropic_method_not_allowed),
+        )
         .layer(axum::middleware::from_fn(correlation::middleware))
         .with_state(live)
 }
@@ -404,10 +432,185 @@ fn error(status: StatusCode, code: &'static str) -> Response {
     )
         .into_response()
 }
+async fn anthropic_method_not_allowed() -> Response {
+    protocol_error(
+        Family::Anthropic,
+        StatusCode::METHOD_NOT_ALLOWED,
+        "invalid_method",
+    )
+}
 fn protocol_error(family: Family, status: StatusCode, code: &'static str) -> Response {
-    match family {
-        Family::OpenAi => error(status, code),
+    if family == Family::OpenAi {
+        return error(status, code);
     }
+    let message = match code {
+        "authentication_failed" => "The local client key was not accepted.",
+        "invalid_json" => "The request body is not valid supported JSON.",
+        "unsupported_content" => "The request contains unsupported content.",
+        "secrets_detected" => {
+            "The request contains secret findings that cannot be forwarded under this policy."
+        }
+        "inspection_deadline" => "The inspection or upstream response deadline was exceeded.",
+        "body_limit" => "The request body is too large.",
+        "invalid_query" => "The request query is not supported.",
+        "invalid_method" => "The request method is not supported.",
+        "invalid_headers" => "The request headers are not supported.",
+        "upstream_configuration" => "The upstream authentication is misconfigured.",
+        "upstream_unavailable" | "upstream_redirect_rejected" => {
+            "The upstream service is unavailable."
+        }
+        "inspection_capacity" => "Inspection capacity is temporarily unavailable.",
+        _ => "The request could not be inspected completely. No request was forwarded.",
+    };
+    let status = if status == StatusCode::REQUEST_TIMEOUT {
+        StatusCode::GATEWAY_TIMEOUT
+    } else {
+        status
+    };
+    let kind = match status {
+        StatusCode::UNAUTHORIZED => "authentication_error",
+        StatusCode::PAYLOAD_TOO_LARGE => "request_too_large",
+        StatusCode::GATEWAY_TIMEOUT => "timeout_error",
+        StatusCode::SERVICE_UNAVAILABLE => "overloaded_error",
+        status if status.is_server_error() => "api_error",
+        _ => "invalid_request_error",
+    };
+    let mut response = (
+        status,
+        axum::Json(serde_json::json!({"type":"error","error":{"type":kind,"message":format!("preflight: {message}")}})),
+    )
+        .into_response();
+    if status.is_client_error()
+        || matches!(
+            code,
+            "upstream_configuration" | "upstream_redirect_rejected"
+        )
+    {
+        response
+            .headers_mut()
+            .insert("x-should-retry", "false".parse().unwrap());
+    }
+    response
+}
+
+fn native_credentials(headers: &HeaderMap) -> Result<(Option<&str>, Option<&str>)> {
+    for name in ["authorization", "x-api-key"] {
+        anyhow::ensure!(
+            headers.get_all(name).iter().count() <= 1,
+            "ambiguous_authentication"
+        );
+    }
+    let bearer = headers
+        .get("authorization")
+        .map(|value| {
+            value
+                .to_str()
+                .ok()
+                .and_then(|value| value.split_once(' '))
+                .filter(|(scheme, _)| scheme.eq_ignore_ascii_case("Bearer"))
+                .map(|(_, value)| value)
+                .filter(|value| !value.is_empty())
+                .ok_or_else(|| anyhow::anyhow!("invalid_authentication"))
+        })
+        .transpose()?;
+    let api_key = headers
+        .get("x-api-key")
+        .map(|value| {
+            value
+                .to_str()
+                .ok()
+                .filter(|value| !value.is_empty())
+                .ok_or_else(|| anyhow::anyhow!("invalid_authentication"))
+        })
+        .transpose()?;
+    if let (Some(a), Some(b)) = (bearer, api_key) {
+        anyhow::ensure!(a == b, "conflicting_authentication");
+    }
+    Ok((bearer, api_key))
+}
+fn anthropic_authorized(app: &App, headers: &HeaderMap) -> bool {
+    let Ok((bearer, api_key)) = native_credentials(headers) else {
+        return false;
+    };
+    app.client_key
+        .as_ref()
+        .is_none_or(|key| bearer.or(api_key) == Some(key.as_str()))
+}
+
+/// @cc [owner:ghuntley,label:security] native-authentication-boundary
+/// A configured local key MUST NOT be forwarded upstream. Anthropic requests
+/// MUST send at most one authentication mechanism, including pass-through mode.
+fn anthropic_upstream_auth(
+    app: &App,
+    headers: &HeaderMap,
+) -> Result<Option<(&'static str, axum::http::HeaderValue)>> {
+    if let Some(key) = &app.upstream_key {
+        return Ok(Some(("x-api-key", key.parse()?)));
+    }
+    anyhow::ensure!(app.client_key.is_none(), "upstream_configuration");
+    let (bearer, api_key) = native_credentials(headers)?;
+    if let Some(value) = api_key {
+        Ok(Some(("x-api-key", value.parse()?)))
+    } else if let Some(value) = bearer {
+        Ok(Some(("authorization", format!("Bearer {value}").parse()?)))
+    } else {
+        Ok(None)
+    }
+}
+fn anthropic_headers_valid(headers: &HeaderMap) -> bool {
+    for name in ["anthropic-version", "anthropic-beta", "content-type"] {
+        if headers.get_all(name).iter().count() > 1 {
+            return false;
+        }
+        if headers
+            .get(name)
+            .is_some_and(|value| value.to_str().is_err())
+        {
+            return false;
+        }
+    }
+    if let Some(version) = headers.get("anthropic-version") {
+        let value = version.as_bytes();
+        if value.len() != 10
+            || !value.iter().enumerate().all(|(i, byte)| {
+                if matches!(i, 4 | 7) {
+                    *byte == b'-'
+                } else {
+                    byte.is_ascii_digit()
+                }
+            })
+        {
+            return false;
+        }
+    }
+    if let Some(beta) = headers.get("anthropic-beta") {
+        let value = beta.to_str().expect("validated header");
+        if value.len() > 1024
+            || value.split(',').count() > 32
+            || !value.split(',').all(|part| {
+                let part = part.trim();
+                !part.is_empty()
+                    && part.len() <= 128
+                    && part
+                        .bytes()
+                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+            })
+        {
+            return false;
+        }
+    }
+    if let Some(content_type) = headers.get("content-type")
+        && content_type
+            .to_str()
+            .expect("validated header")
+            .split(';')
+            .next()
+            .map(str::trim)
+            != Some("application/json")
+    {
+        return false;
+    }
+    true
 }
 
 fn authorized(app: &App, h: &HeaderMap) -> bool {
@@ -433,6 +636,13 @@ fn approve(
     if mode != Mode::Advisory
         && (!inspection.rules.is_empty() && mode == Mode::NoGo || inspection.unsafe_findings)
     {
+        if family == Family::Anthropic {
+            return Err(Box::new(protocol_error(
+                family,
+                StatusCode::BAD_REQUEST,
+                "secrets_detected",
+            )));
+        }
         return Err(Box::new((StatusCode::CONFLICT,axum::Json(serde_json::json!({"error":{"type":"preflight_error","code":"secrets_detected","finding_ids":finding_ids}}))).into_response()));
     }
     let bytes = if mode == Mode::Redact && inspection.changed {
@@ -487,6 +697,7 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
     let fail = |status, code| protocol_error(spec.family, status, code);
     let authorized = match spec.family {
         Family::OpenAi => authorized(app, req.headers()),
+        Family::Anthropic => anthropic_authorized(app, req.headers()),
     };
     if !authorized {
         return fail(StatusCode::UNAUTHORIZED, "authentication_failed");
@@ -495,6 +706,15 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
         Ok(target) => target,
         Err(_) => return fail(StatusCode::BAD_REQUEST, "invalid_query"),
     };
+    if spec.family == Family::Anthropic
+        && (!anthropic_headers_valid(req.headers())
+            || req
+                .headers()
+                .get("anthropic-beta")
+                .is_some_and(|v| v.to_str().is_ok_and(|v| !app.scanner.scan(v).is_empty())))
+    {
+        return fail(StatusCode::BAD_REQUEST, "invalid_headers");
+    }
     if req.headers().contains_key("content-encoding") {
         return fail(
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -508,12 +728,27 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
     };
     let plan = match spec.classify(&bytes) {
         Ok(plan) => plan,
+        Err(e)
+            if matches!(
+                e.downcast_ref::<document::PlanError>(),
+                Some(document::PlanError::Unsupported)
+            ) =>
+        {
+            return fail(StatusCode::BAD_REQUEST, "unsupported_content");
+        }
         Err(_) => return fail(StatusCode::BAD_REQUEST, "invalid_json"),
     };
     let scope = preflight::digest(
         parts
             .headers
             .get("authorization")
+            .or_else(|| {
+                if spec.family == Family::Anthropic {
+                    parts.headers.get("x-api-key")
+                } else {
+                    None
+                }
+            })
             .map(|v| v.as_bytes())
             .unwrap_or(b"local"),
     );
@@ -529,6 +764,9 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
     {
         Ok(v) => v,
         Err(e) => match e.downcast_ref::<document::PlanError>() {
+            Some(document::PlanError::Unsupported) => {
+                return fail(StatusCode::BAD_REQUEST, "unsupported_content");
+            }
             Some(document::PlanError::Acquisition) => {
                 return fail(
                     StatusCode::UNPROCESSABLE_ENTITY,
@@ -631,12 +869,27 @@ async fn forward(
     family: Family,
 ) -> Response {
     let fail = |status, code| protocol_error(family, status, code);
+    let native_auth = if family == Family::Anthropic {
+        anthropic_upstream_auth(app, &headers)
+    } else {
+        Ok(None)
+    };
     strip_headers(&mut headers);
     // Apply after hop-by-hop stripping: Connection must not remove our identity.
     id.set_header(&mut headers);
     headers.remove("x-preflight-request-id");
     headers.remove("accept-encoding");
-    if let Some(key) = &app.upstream_key {
+    if family == Family::Anthropic {
+        headers.remove("authorization");
+        headers.remove("x-api-key");
+        match native_auth {
+            Ok(Some((name, value))) => {
+                headers.insert(name, value);
+            }
+            Ok(None) => {}
+            Err(_) => return fail(StatusCode::INTERNAL_SERVER_ERROR, "upstream_configuration"),
+        }
+    } else if let Some(key) = &app.upstream_key {
         match format!("Bearer {key}").parse() {
             Ok(value) => {
                 headers.insert("authorization", value);
@@ -725,6 +978,26 @@ impl Drop for ObservedStream {
 mod policy_properties {
     use super::*;
     use hegel::{TestCase, generators as gs};
+    #[test]
+    fn authentication_configuration_rejects_unusable_native_forwarding() {
+        assert!(validate_auth_configuration(None, None).is_ok());
+        assert!(validate_auth_configuration(None, Some("fake-upstream-key")).is_ok());
+        assert!(
+            validate_auth_configuration(Some("fake-local-key"), Some("fake-upstream-key")).is_ok()
+        );
+        assert!(validate_auth_configuration(Some("fake-local-key"), None).is_err());
+        for invalid in ["", "fake\nkey", "fake\rkey"] {
+            assert!(validate_auth_configuration(None, Some(invalid)).is_err());
+            assert!(validate_auth_configuration(Some(invalid), Some("fake-upstream-key")).is_err());
+        }
+    }
+
+    #[hegel::test]
+    fn local_authentication_always_requires_upstream_credentials(tc: TestCase) {
+        let local = tc.draw(gs::text());
+        assert!(validate_auth_configuration(Some(&local), None).is_err());
+    }
+
     #[hegel::test]
     fn enforcing_policy_never_approves_unrewritable_findings(tc: TestCase) {
         let count = tc.draw(gs::integers::<usize>().min_value(1).max_value(20));
@@ -761,6 +1034,9 @@ mod policy_properties {
         assert_eq!(approved.bytes, original);
     }
 }
+
+#[cfg(test)]
+mod proxy_tests;
 
 #[cfg(test)]
 mod legacy_http_tests;
