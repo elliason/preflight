@@ -157,7 +157,7 @@ preflight cache purge [--scope SCOPE_ID] [--socket PATH]
 | `POST /v1/messages/count_tokens` | bearer or `x-api-key`, if configured | inspect the same content before token counting |
 | `POST /v1/responses` | client key, if configured | inspect a Responses request, then stream through underclass |
 | `POST /v1/chat/completions` | client key, if configured | inspect a Chat Completions request, then stream through underclass |
-| `GET /v1/models` | bearer client key, if configured | forward model discovery |
+| `GET /v1/models` | bearer or native `x-api-key`, if configured | forward validated native discovery queries; retain legacy bearer-only query discard |
 | `GET /healthz` | none | local liveness probe |
 | `GET /readyz` | none | readiness after startup toolchain checks |
 | `GET /metrics` | none | aggregate Prometheus counters and request-to-headers timings |
@@ -206,8 +206,17 @@ and the replacement uses `anthropic_upstream_auth`: `x-api-key` (default) or
 `bearer`. Unknown auth forms reject during configuration load/reload.
 With neither key configured, one native credential can pass through. OpenAI
 routes retain their existing authentication, document walker, and query-discard
-behavior for valid configurations. Model discovery remains bearer-only with
-queries discarded; native discovery support is separate work.
+behavior for valid configurations.
+
+Discovery compatibility change: `GET /v1/models` selects native semantics when
+`x-api-key`, `anthropic-version`, or `anthropic-beta` is present. Native discovery
+accepts `limit` (1–1000), one `before_id` or `after_id` cursor (bounded ASCII
+letters/digits/hyphens/underscores), and `beta=true`; it rejects unknown, duplicate,
+or encoded parameters and forwards the validated query unchanged. Bearer-only
+discovery without native headers retains its previous query-discard behavior.
+Unregistered `/v1/messages/*` routes return native `not_found_error` envelopes;
+they never forward. Individual `/v1/models/{id}` lookups are unsupported and
+return 404: a native envelope with native headers, otherwise an empty response.
 
 ### Correlation with underclass
 

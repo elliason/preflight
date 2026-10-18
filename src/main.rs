@@ -376,6 +376,7 @@ fn router(live: Arc<Live>) -> Router {
             "/v1/messages/count_tokens",
             post(|s, r| infer(s, r, Adapter::CountTokens)).fallback(anthropic_method_not_allowed),
         )
+        .fallback(not_found)
         .layer(axum::middleware::from_fn(correlation::middleware))
         .with_state(live)
 }
@@ -450,6 +451,18 @@ async fn anthropic_method_not_allowed() -> Response {
         "invalid_method",
     )
 }
+async fn not_found(req: Request) -> Response {
+    if req.uri().path().starts_with("/v1/messages/")
+        || (req.uri().path().starts_with("/v1/models/")
+            && ["x-api-key", "anthropic-version", "anthropic-beta"]
+                .iter()
+                .any(|name| req.headers().contains_key(*name)))
+    {
+        protocol_error(Family::Anthropic, StatusCode::NOT_FOUND, "route_not_found")
+    } else {
+        StatusCode::NOT_FOUND.into_response()
+    }
+}
 fn protocol_error(family: Family, status: StatusCode, code: &'static str) -> Response {
     if family == Family::OpenAi {
         return error(status, code);
@@ -465,6 +478,7 @@ fn protocol_error(family: Family, status: StatusCode, code: &'static str) -> Res
         "body_limit" => "The request body is too large.",
         "invalid_query" => "The request query is not supported.",
         "invalid_method" => "The request method is not supported.",
+        "route_not_found" => "The requested route is not registered.",
         "invalid_headers" => "The request headers are not supported.",
         "upstream_configuration" => "The upstream authentication is misconfigured.",
         "upstream_unavailable" | "upstream_redirect_rejected" => {
@@ -480,6 +494,7 @@ fn protocol_error(family: Family, status: StatusCode, code: &'static str) -> Res
     };
     let kind = match status {
         StatusCode::UNAUTHORIZED => "authentication_error",
+        StatusCode::NOT_FOUND => "not_found_error",
         StatusCode::PAYLOAD_TOO_LARGE => "request_too_large",
         StatusCode::GATEWAY_TIMEOUT => "timeout_error",
         StatusCode::SERVICE_UNAVAILABLE => "overloaded_error",
@@ -857,6 +872,48 @@ async fn models(State(live): State<Arc<Live>>, req: Request) -> Response {
         .get::<RequestId>()
         .expect("request identity middleware");
     let app = live.snapshot();
+    // Compatibility: native headers select native discovery. Bare bearer
+    // discovery retains the legacy authentication and query-discard behavior.
+    if ["x-api-key", "anthropic-version", "anthropic-beta"]
+        .iter()
+        .any(|name| req.headers().contains_key(*name))
+    {
+        if !anthropic_authorized(&app, req.headers()) {
+            return protocol_error(
+                Family::Anthropic,
+                StatusCode::UNAUTHORIZED,
+                "authentication_failed",
+            );
+        }
+        if !anthropic_headers_valid(req.headers())
+            || req.headers().get("anthropic-beta").is_some_and(|value| {
+                value
+                    .to_str()
+                    .is_ok_and(|value| !app.scanner.scan(value).is_empty())
+            })
+        {
+            return protocol_error(
+                Family::Anthropic,
+                StatusCode::BAD_REQUEST,
+                "invalid_headers",
+            );
+        }
+        let target = match preflight::protocol::models_target(req.uri()) {
+            Ok(target) if app.scanner.scan(&target).is_empty() => target,
+            _ => {
+                return protocol_error(Family::Anthropic, StatusCode::BAD_REQUEST, "invalid_query");
+            }
+        };
+        return forward(
+            &app,
+            &target,
+            req.headers().clone(),
+            None,
+            id,
+            Family::Anthropic,
+        )
+        .await;
+    }
     if !authorized(&app, req.headers()) {
         return error(StatusCode::UNAUTHORIZED, "authentication_failed");
     }

@@ -60,6 +60,49 @@ impl Adapter {
     }
 }
 
+/// @cc [owner:ghuntley,label:security] native-discovery-query
+/// Native model discovery MUST forward only bounded, unique, declared query
+/// parameters, preserving the validated query bytes. Unknown encodings reject.
+pub fn models_target(uri: &Uri) -> Result<String> {
+    anyhow::ensure!(uri.path() == "/v1/models", "invalid_route");
+    if let Some(query) = uri.query() {
+        anyhow::ensure!(!query.is_empty() && query.len() <= 1024, "invalid_query");
+        let mut seen = std::collections::HashSet::new();
+        for pair in query.split('&') {
+            let (key, value) = pair
+                .split_once('=')
+                .ok_or_else(|| anyhow::anyhow!("invalid_query"))?;
+            anyhow::ensure!(seen.insert(key), "invalid_query");
+            let valid = match key {
+                "beta" => value == "true",
+                "limit" => {
+                    !value.is_empty()
+                        && value.bytes().all(|b| b.is_ascii_digit())
+                        && value
+                            .parse::<u16>()
+                            .is_ok_and(|limit| (1..=1000).contains(&limit))
+                }
+                "before_id" | "after_id" => {
+                    !value.is_empty()
+                        && value.len() <= 256
+                        && value
+                            .bytes()
+                            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_'))
+                }
+                _ => false,
+            };
+            anyhow::ensure!(valid, "invalid_query");
+        }
+        anyhow::ensure!(
+            !(seen.contains("before_id") && seen.contains("after_id")),
+            "invalid_query"
+        );
+        Ok(format!("/v1/models?{query}"))
+    } else {
+        Ok("/v1/models".into())
+    }
+}
+
 /// A plan owns the classified body: callers cannot substitute unclassified data.
 /// Object keys and array indices form structural paths, never JSONPath strings.
 #[derive(Debug)]

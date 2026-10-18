@@ -549,3 +549,46 @@ fn editor_lines_reconstruct_every_canary_split(tc: TestCase) {
             .contains(&canary)
     );
 }
+
+#[test]
+fn native_discovery_query_fixtures_are_closed_and_preserved() {
+    use preflight::protocol::models_target;
+    for query in [
+        "",
+        "?limit=1",
+        "?limit=1000",
+        "?after_id=model_1&limit=10",
+        "?before_id=model-1&beta=true",
+    ] {
+        let uri = format!("/v1/models{query}").parse().unwrap();
+        assert_eq!(models_target(&uri).unwrap(), format!("/v1/models{query}"));
+    }
+    for query in [
+        "?",
+        "?limit=0",
+        "?limit=-1",
+        "?limit=1001",
+        "?limit=1&limit=2",
+        "?limit=%31",
+        "?before_id=a&after_id=b",
+        "?after_id=",
+        "?after_id=a%26beta=true",
+        "?beta=false",
+        "?beta=true&",
+        "?unknown=1",
+    ] {
+        assert!(models_target(&format!("/v1/models{query}").parse().unwrap()).is_err());
+    }
+    assert!(models_target(&"/v1/models/fixture".parse().unwrap()).is_err());
+}
+
+#[hegel::test]
+fn discovery_limits_preserve_valid_values_and_reject_outside_range(tc: TestCase) {
+    let limit = tc.draw(gs::integers::<u16>());
+    let uri = format!("/v1/models?limit={limit}").parse().unwrap();
+    let result = preflight::protocol::models_target(&uri);
+    assert_eq!(result.is_ok(), (1..=1000).contains(&limit));
+    if let Ok(target) = result {
+        assert_eq!(target, uri.to_string());
+    }
+}

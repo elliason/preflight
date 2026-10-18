@@ -736,3 +736,188 @@ fn upstream_auth_form_is_validated_at_configuration_load() {
         AnthropicUpstreamAuth::XApiKey
     );
 }
+
+#[tokio::test]
+async fn native_discovery_validates_queries_and_unknown_message_routes_are_native_errors() {
+    let captured = Arc::new(Mutex::new(Vec::<Captured>::new()));
+    let seen = captured.clone();
+    let upstream = Router::new().route(
+        "/v1/models",
+        get(move |uri: Uri, headers: HeaderMap| {
+            let seen = seen.clone();
+            async move {
+                seen.lock().unwrap().push(Captured {
+                    uri,
+                    headers,
+                    body: Bytes::new(),
+                });
+                ([("content-type", "application/json")], "{ \"data\": [] }")
+            }
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let upstream_address = listener.local_addr().unwrap();
+    let upstream_task = tokio::spawn(async move { axum::serve(listener, upstream).await.unwrap() });
+    let client = reqwest::Client::new();
+    for auth in [
+        AnthropicUpstreamAuth::XApiKey,
+        AnthropicUpstreamAuth::Bearer,
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let mut runtime = app(
+            temp.path(),
+            format!("http://{upstream_address}"),
+            Mode::Redact,
+        );
+        runtime.config.anthropic_upstream_auth = auth;
+        let live = Arc::new(Live {
+            current: RwLock::new(Arc::new(runtime)),
+        });
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let proxy = tokio::spawn(async move { axum::serve(listener, router(live)).await.unwrap() });
+        for query in [
+            "",
+            "?limit=1000",
+            "?after_id=fixture&limit=1&beta=true",
+            "?before_id=fixture",
+        ] {
+            for (header, value) in [
+                ("x-api-key", "local-fixture-key"),
+                ("authorization", "Bearer local-fixture-key"),
+            ] {
+                let response = client
+                    .get(format!("http://{address}/v1/models{query}"))
+                    .header(header, value)
+                    .header("anthropic-version", "2023-06-01")
+                    .send()
+                    .await
+                    .unwrap();
+                assert_eq!(response.status(), 200);
+                assert_eq!(response.text().await.unwrap(), "{ \"data\": [] }");
+                let sent = captured.lock().unwrap().last().unwrap().clone();
+                assert_eq!(sent.uri.to_string(), format!("/v1/models{query}"));
+                assert_eq!(sent.headers["anthropic-version"], "2023-06-01");
+                match auth {
+                    AnthropicUpstreamAuth::XApiKey => {
+                        assert_eq!(sent.headers["x-api-key"], "upstream-fixture-key");
+                        assert!(!sent.headers.contains_key("authorization"));
+                    }
+                    AnthropicUpstreamAuth::Bearer => {
+                        assert_eq!(sent.headers["authorization"], "Bearer upstream-fixture-key");
+                        assert!(!sent.headers.contains_key("x-api-key"));
+                    }
+                }
+            }
+        }
+        // Native x-api-key selects native behavior even without a version header.
+        let response = client
+            .get(format!("http://{address}/v1/models?limit=2"))
+            .header("x-api-key", "local-fixture-key")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 200);
+        assert_eq!(
+            captured.lock().unwrap().last().unwrap().uri.query(),
+            Some("limit=2")
+        );
+        // Ordinary bearer-only discovery preserves legacy query discard and upstream bearer.
+        let response = client
+            .get(format!("http://{address}/v1/models?legacy=discarded"))
+            .header("authorization", "Bearer local-fixture-key")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 200);
+        let sent = captured.lock().unwrap().last().unwrap().clone();
+        assert!(sent.uri.query().is_none());
+        assert_eq!(sent.headers["authorization"], "Bearer upstream-fixture-key");
+        let before = captured.lock().unwrap().len();
+        for query in [
+            "?limit=0",
+            "?limit=1001",
+            "?limit=1&limit=2",
+            "?limit=%31",
+            "?unknown=1",
+            "?before_id=a&after_id=b",
+            "?after_id=",
+            "?beta=false",
+        ] {
+            let response = client
+                .get(format!("http://{address}/v1/models{query}"))
+                .header("x-api-key", "local-fixture-key")
+                .send()
+                .await
+                .unwrap();
+            assert_eq!(response.status(), 400);
+            assert_eq!(
+                response.json::<Value>().await.unwrap()["error"]["type"],
+                "invalid_request_error"
+            );
+            assert_eq!(captured.lock().unwrap().len(), before);
+        }
+        let response = client
+            .get(format!("http://{address}/v1/models"))
+            .header("anthropic-version", "2023-06-01")
+            .header("x-api-key", "wrong-fixture-key")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 401);
+        assert_eq!(captured.lock().unwrap().len(), before);
+        for path in [
+            "/v1/messages/cache_touch",
+            "/v1/messages/batches",
+            "/v1/messages/unknown",
+        ] {
+            for method in [reqwest::Method::GET, reqwest::Method::POST] {
+                let response = client
+                    .request(method, format!("http://{address}{path}"))
+                    .send()
+                    .await
+                    .unwrap();
+                assert_eq!(response.status(), 404);
+                assert_eq!(response.headers()["x-should-retry"], "false");
+                assert_eq!(
+                    response.json::<Value>().await.unwrap(),
+                    json!({"type":"error","error":{"type":"not_found_error","message":"preflight: The requested route is not registered."}})
+                );
+                assert_eq!(captured.lock().unwrap().len(), before);
+            }
+        }
+        for (header, value) in [
+            ("x-api-key", "local-fixture-key"),
+            ("anthropic-version", "2023-06-01"),
+            ("anthropic-beta", "fixture-beta"),
+            ("authorization", "Bearer local-fixture-key"),
+        ] {
+            let response = client
+                .get(format!("http://{address}/v1/models/fixture"))
+                .header(header, value)
+                .send()
+                .await
+                .unwrap();
+            assert_eq!(response.status(), 404);
+            if header == "authorization" {
+                assert!(response.bytes().await.unwrap().is_empty());
+            } else {
+                assert_eq!(response.headers()["x-should-retry"], "false");
+                assert_eq!(
+                    response.json::<Value>().await.unwrap()["error"]["type"],
+                    "not_found_error"
+                );
+            }
+            assert_eq!(captured.lock().unwrap().len(), before);
+        }
+        let response = client
+            .get(format!("http://{address}/unregistered"))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 404);
+        assert!(response.bytes().await.unwrap().is_empty());
+        proxy.abort();
+    }
+    upstream_task.abort();
+}
