@@ -1,0 +1,4577 @@
+{
+  "base_revision": "eb13fc015686202d15c7ed57faa3d975482bcc32",
+  "cases": [
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "clean",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "editable",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "44"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"model\":\"fixture\",\"input\":\"[REDACTED:jwt]\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "structural",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "nested-json",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "55"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"tool\":\"{\\\"nested\\\":\\\"[REDACTED:jwt]\\\",\\\"number\\\":7}\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "text-attachment",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "68"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_file\",\"file_data\":\"W1JFREFDVEVEOmp3dF0=\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "split-text",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "2"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "137"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_text\",\"text\":\"[REDACTED:private-key-fragment]\"},{\"type\":\"input_text\",\"text\":\"[REDACTED:private-key-fragment]\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "malformed",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "nested-duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "non-object",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "body-limit",
+      "response": {
+        "status": 413,
+        "headers": {
+          "content-length": [
+            "79"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"body_limit\",\"message\":\"body_limit\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "unresolved-reference",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"attachment_resolution_failed\",\"message\":\"attachment_resolution_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "bad-attachment",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "unsupported-audio",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "missing-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "wrong-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "auth-before-encoding-and-json",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "encoding-before-json",
+      "response": {
+        "status": 415,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"content_encoding_unsupported\",\"message\":\"content_encoding_unsupported\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "opaque-upstream-error",
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "error"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "redact",
+      "case": "upstream-redirect",
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-length": [
+            "111"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"upstream_redirect_rejected\",\"message\":\"upstream_redirect_rejected\"}}"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "redirect"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "clean",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "editable",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "structural",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "nested-json",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "text-attachment",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "split-text",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "2"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "malformed",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "nested-duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "non-object",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "body-limit",
+      "response": {
+        "status": 413,
+        "headers": {
+          "content-length": [
+            "79"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"body_limit\",\"message\":\"body_limit\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "unresolved-reference",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"attachment_resolution_failed\",\"message\":\"attachment_resolution_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "bad-attachment",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "unsupported-audio",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "missing-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "wrong-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "auth-before-encoding-and-json",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "encoding-before-json",
+      "response": {
+        "status": 415,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"content_encoding_unsupported\",\"message\":\"content_encoding_unsupported\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "opaque-upstream-error",
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "error"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "no-go",
+      "case": "upstream-redirect",
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-length": [
+            "111"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"upstream_redirect_rejected\",\"message\":\"upstream_redirect_rejected\"}}"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "redirect"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "clean",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "editable",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "155"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"model\":\"fixture\",\"input\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmVmbGlnaHQtY2FuYXJ5LW5vdC1hLXNlY3JldCJ9.ZmFrZS1zaWduYXR1cmUtbmV2ZXItdmFsaWQ\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "structural",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "153"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"model\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmVmbGlnaHQtY2FuYXJ5LW5vdC1hLXNlY3JldCJ9.ZmFrZS1zaWduYXR1cmUtbmV2ZXItdmFsaWQ\",\"input\":\"hello\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "nested-json",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "166"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"tool\":\"{\\\"nested\\\":\\\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmVmbGlnaHQtY2FuYXJ5LW5vdC1hLXNlY3JldCJ9.ZmFrZS1zaWduYXR1cmUtbmV2ZXItdmFsaWQ\\\",\\\"number\\\":7}\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "text-attachment",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "216"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_file\",\"file_data\":\"ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lKd2NtVm1iR2xuYUhRdFkyRnVZWEo1TFc1dmRDMWhMWE5sWTNKbGRDSjkuWm1GclpTMXphV2R1WVhSMWNtVXRibVYyWlhJdGRtRnNhV1E=\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "split-text",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "2"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "138"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_text\",\"text\":\"-----BEGIN PRIVATE KEY-----\"},{\"type\":\"input_text\",\"text\":\"synthetic\\n-----END PRIVATE KEY-----\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "malformed",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "nested-duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "non-object",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "body-limit",
+      "response": {
+        "status": 413,
+        "headers": {
+          "content-length": [
+            "79"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"body_limit\",\"message\":\"body_limit\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "unresolved-reference",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"attachment_resolution_failed\",\"message\":\"attachment_resolution_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "bad-attachment",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "unsupported-audio",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "missing-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "wrong-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "auth-before-encoding-and-json",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "encoding-before-json",
+      "response": {
+        "status": 415,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"content_encoding_unsupported\",\"message\":\"content_encoding_unsupported\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "opaque-upstream-error",
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "error"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/responses",
+      "mode": "advisory",
+      "case": "upstream-redirect",
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-length": [
+            "111"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"upstream_redirect_rejected\",\"message\":\"upstream_redirect_rejected\"}}"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/responses",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "57"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "redirect"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"input\": \"hello\", \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "clean",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "editable",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "75"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"model\":\"fixture\",\"messages\":[{\"role\":\"user\",\"content\":\"[REDACTED:jwt]\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "structural",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "nested-json",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "55"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"tool\":\"{\\\"nested\\\":\\\"[REDACTED:jwt]\\\",\\\"number\\\":7}\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "text-attachment",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "68"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_file\",\"file_data\":\"W1JFREFDVEVEOmp3dF0=\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "split-text",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "2"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "137"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_text\",\"text\":\"[REDACTED:private-key-fragment]\"},{\"type\":\"input_text\",\"text\":\"[REDACTED:private-key-fragment]\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "malformed",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "nested-duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "non-object",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "body-limit",
+      "response": {
+        "status": 413,
+        "headers": {
+          "content-length": [
+            "79"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"body_limit\",\"message\":\"body_limit\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "unresolved-reference",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"attachment_resolution_failed\",\"message\":\"attachment_resolution_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "bad-attachment",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "unsupported-audio",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "missing-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "wrong-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "auth-before-encoding-and-json",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "encoding-before-json",
+      "response": {
+        "status": 415,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"content_encoding_unsupported\",\"message\":\"content_encoding_unsupported\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "opaque-upstream-error",
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "error"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "redact",
+      "case": "upstream-redirect",
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-length": [
+            "111"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"upstream_redirect_rejected\",\"message\":\"upstream_redirect_rejected\"}}"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "redirect"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "clean",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "editable",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "structural",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "nested-json",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "text-attachment",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "split-text",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": [
+            "117"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "2"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"secrets_detected\",\"finding_ids\":[\"00000000-0000-4000-8000-000000000000\"]}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "malformed",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "nested-duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "non-object",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "body-limit",
+      "response": {
+        "status": 413,
+        "headers": {
+          "content-length": [
+            "79"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"body_limit\",\"message\":\"body_limit\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "unresolved-reference",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"attachment_resolution_failed\",\"message\":\"attachment_resolution_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "bad-attachment",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "unsupported-audio",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "missing-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "wrong-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "auth-before-encoding-and-json",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "encoding-before-json",
+      "response": {
+        "status": 415,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"content_encoding_unsupported\",\"message\":\"content_encoding_unsupported\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "opaque-upstream-error",
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "error"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "no-go",
+      "case": "upstream-redirect",
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-length": [
+            "111"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"upstream_redirect_rejected\",\"message\":\"upstream_redirect_rejected\"}}"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "redirect"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "clean",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "editable",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "186"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"model\":\"fixture\",\"messages\":[{\"role\":\"user\",\"content\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmVmbGlnaHQtY2FuYXJ5LW5vdC1hLXNlY3JldCJ9.ZmFrZS1zaWduYXR1cmUtbmV2ZXItdmFsaWQ\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "structural",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "153"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"model\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmVmbGlnaHQtY2FuYXJ5LW5vdC1hLXNlY3JldCJ9.ZmFrZS1zaWduYXR1cmUtbmV2ZXItdmFsaWQ\",\"input\":\"hello\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "nested-json",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "166"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"tool\":\"{\\\"nested\\\":\\\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwcmVmbGlnaHQtY2FuYXJ5LW5vdC1hLXNlY3JldCJ9.ZmFrZS1zaWduYXR1cmUtbmV2ZXItdmFsaWQ\\\",\\\"number\\\":7}\"}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "text-attachment",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "1"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "216"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_file\",\"file_data\":\"ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lKd2NtVm1iR2xuYUhRdFkyRnVZWEo1TFc1dmRDMWhMWE5sWTNKbGRDSjkuWm1GclpTMXphV2R1WVhSMWNtVXRibVYyWlhJdGRtRnNhV1E=\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "split-text",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "2"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "138"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "success"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{\"input\":[{\"type\":\"input_text\",\"text\":\"-----BEGIN PRIVATE KEY-----\"},{\"type\":\"input_text\",\"text\":\"synthetic\\n-----END PRIVATE KEY-----\"}]}"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "malformed",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "nested-duplicate-key",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "non-object",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": [
+            "83"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"invalid_json\",\"message\":\"invalid_json\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "body-limit",
+      "response": {
+        "status": 413,
+        "headers": {
+          "content-length": [
+            "79"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"body_limit\",\"message\":\"body_limit\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "unresolved-reference",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"attachment_resolution_failed\",\"message\":\"attachment_resolution_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "bad-attachment",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "unsupported-audio",
+      "response": {
+        "status": 422,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"inspection_incomplete\",\"message\":\"inspection_incomplete\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "missing-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "wrong-auth",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "auth-before-encoding-and-json",
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-length": [
+            "101"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"authentication_failed\",\"message\":\"authentication_failed\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "encoding-before-json",
+      "response": {
+        "status": 415,
+        "headers": {
+          "content-length": [
+            "115"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"content_encoding_unsupported\",\"message\":\"content_encoding_unsupported\"}}"
+      },
+      "forwarded": []
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "opaque-upstream-error",
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "location": [
+            "/must-not-follow"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ],
+          "x-upstream-fixture": [
+            "preserved"
+          ]
+        },
+        "body": "{ \"fixture\": \"opaque upstream bytes\" }\n"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "error"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    },
+    {
+      "path": "/v1/chat/completions",
+      "mode": "advisory",
+      "case": "upstream-redirect",
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-length": [
+            "111"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "date": [
+            "<date>"
+          ],
+          "x-preflight-finding-count": [
+            "0"
+          ],
+          "x-request-id": [
+            "00000000-0000-4000-8000-000000000000"
+          ]
+        },
+        "body": "{\"error\":{\"type\":\"preflight_error\",\"code\":\"upstream_redirect_rejected\",\"message\":\"upstream_redirect_rejected\"}}"
+      },
+      "forwarded": [
+        {
+          "method": "POST",
+          "target": "/v1/chat/completions",
+          "headers": {
+            "accept": [
+              "*/*"
+            ],
+            "anthropic-beta": [
+              "legacy/unvalidated"
+            ],
+            "anthropic-version": [
+              "legacy-unvalidated"
+            ],
+            "authorization": [
+              "Bearer upstream-fixture-key"
+            ],
+            "content-length": [
+              "88"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "host": [
+              "<upstream>"
+            ],
+            "x-api-key": [
+              "legacy-fixture-passthrough"
+            ],
+            "x-fixture-reply": [
+              "redirect"
+            ],
+            "x-request-id": [
+              "00000000-0000-4000-8000-000000000000"
+            ]
+          },
+          "body": "{ \"model\": \"fixture\", \"messages\": [{\"role\":\"user\",\"content\":\"hello\"}], \"stream\": true }\n"
+        }
+      ]
+    }
+  ]
+}

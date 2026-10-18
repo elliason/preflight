@@ -9,6 +9,7 @@ use axum::{
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use preflight::correlation::{self, RequestId};
+use preflight::protocol::{Adapter, Family, RouteSpec};
 use preflight::{attachments::Attachments, cache::Cache, document, scanner::Scanner};
 use serde::Deserialize;
 use std::{
@@ -146,6 +147,7 @@ fn load(path: Option<PathBuf>) -> Result<Config> {
     );
     Ok(c)
 }
+
 fn scanner(config: &Config) -> Result<Scanner> {
     let hashes = match &config.carnet {
         Some(p) => {
@@ -303,23 +305,7 @@ async fn run() -> Result<()> {
                     }
                 }
             });
-            let router = Router::new()
-                .route("/healthz", get(|| async { "ok" }))
-                .route("/readyz", get(|| async { "ok" }))
-                .route(
-                    "/metrics",
-                    get(|| async {
-                        (
-                            [("content-type", "text/plain; version=0.0.4")],
-                            preflight::metrics::render(),
-                        )
-                    }),
-                )
-                .route("/v1/models", get(models))
-                .route("/v1/responses", post(infer))
-                .route("/v1/chat/completions", post(infer))
-                .layer(axum::middleware::from_fn(correlation::middleware))
-                .with_state(live);
+            let router = router(live);
             axum::serve(listener, router)
                 .with_graceful_shutdown(async {
                     let _ = tokio::signal::ctrl_c().await;
@@ -329,6 +315,32 @@ async fn run() -> Result<()> {
         }
     }
 }
+fn router(live: Arc<Live>) -> Router {
+    Router::new()
+        .route("/healthz", get(|| async { "ok" }))
+        .route("/readyz", get(|| async { "ok" }))
+        .route(
+            "/metrics",
+            get(|| async {
+                (
+                    [("content-type", "text/plain; version=0.0.4")],
+                    preflight::metrics::render(),
+                )
+            }),
+        )
+        .route("/v1/models", get(models))
+        .route(
+            "/v1/responses",
+            post(|s, r| infer(s, r, Adapter::Responses)),
+        )
+        .route(
+            "/v1/chat/completions",
+            post(|s, r| infer(s, r, Adapter::ChatCompletions)),
+        )
+        .layer(axum::middleware::from_fn(correlation::middleware))
+        .with_state(live)
+}
+
 /// @cc [owner:ghuntley,label:security] atomic-profile-reload
 /// A failed reload MUST leave the previous runtime active. Admitted requests MUST
 /// retain their immutable runtime snapshot through approval and forwarding.
@@ -392,6 +404,12 @@ fn error(status: StatusCode, code: &'static str) -> Response {
     )
         .into_response()
 }
+fn protocol_error(family: Family, status: StatusCode, code: &'static str) -> Response {
+    match family {
+        Family::OpenAi => error(status, code),
+    }
+}
+
 fn authorized(app: &App, h: &HeaderMap) -> bool {
     app.client_key.as_ref().is_none_or(|k| {
         h.get("authorization")
@@ -410,6 +428,7 @@ fn approve(
     inspection: document::Inspection,
     mode: Mode,
     finding_ids: &[String],
+    family: Family,
 ) -> std::result::Result<ApprovedRequest, Box<Response>> {
     if mode != Mode::Advisory
         && (!inspection.rules.is_empty() && mode == Mode::NoGo || inspection.unsafe_findings)
@@ -417,45 +436,67 @@ fn approve(
         return Err(Box::new((StatusCode::CONFLICT,axum::Json(serde_json::json!({"error":{"type":"preflight_error","code":"secrets_detected","finding_ids":finding_ids}}))).into_response()));
     }
     let bytes = if mode == Mode::Redact && inspection.changed {
-        serde_json::to_vec(&inspection.body)
-            .map_err(|_| Box::new(error(StatusCode::BAD_REQUEST, "serialization_failed")))?
+        serde_json::to_vec(&inspection.body).map_err(|_| {
+            Box::new(protocol_error(
+                family,
+                StatusCode::BAD_REQUEST,
+                "serialization_failed",
+            ))
+        })?
     } else {
         original.to_vec()
     };
     Ok(ApprovedRequest { bytes })
 }
-async fn infer(State(live): State<Arc<Live>>, req: Request) -> Response {
+async fn infer(State(live): State<Arc<Live>>, req: Request, adapter: Adapter) -> Response {
     let id = *req
         .extensions()
         .get::<RequestId>()
         .expect("request identity middleware");
+    let spec = adapter.route();
     let app = live.snapshot();
     let Ok(_permit) = app.admission.try_acquire() else {
-        return error(StatusCode::SERVICE_UNAVAILABLE, "inspection_capacity");
+        return protocol_error(
+            spec.family,
+            StatusCode::SERVICE_UNAVAILABLE,
+            "inspection_capacity",
+        );
     };
     let start = std::time::Instant::now();
     let mut response = match tokio::time::timeout(
         std::time::Duration::from_secs(app.config.request_timeout_secs),
-        inspect_and_forward(&app, req, id).instrument(
+        inspect_and_forward(&app, req, id, spec).instrument(
             tracing::info_span!("inspection",request_id=%id,profile=%app.scanner.profile),
         ),
     )
     .await
     {
         Ok(r) => r,
-        Err(_) => error(StatusCode::REQUEST_TIMEOUT, "inspection_deadline"),
+        Err(_) => protocol_error(
+            spec.family,
+            StatusCode::REQUEST_TIMEOUT,
+            "inspection_deadline",
+        ),
     };
     id.set_header(response.headers_mut());
     tracing::info!(event="request.policy_completed",request_id=%id,status=response.status().as_u16(),duration_ms=start.elapsed().as_millis() as u64);
     preflight::metrics::observe(start.elapsed(), response.status().as_u16());
     response
 }
-async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response {
-    if !authorized(app, req.headers()) {
-        return error(StatusCode::UNAUTHORIZED, "authentication_failed");
+async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: RouteSpec) -> Response {
+    let fail = |status, code| protocol_error(spec.family, status, code);
+    let authorized = match spec.family {
+        Family::OpenAi => authorized(app, req.headers()),
+    };
+    if !authorized {
+        return fail(StatusCode::UNAUTHORIZED, "authentication_failed");
     }
+    let target = match spec.target(req.uri()) {
+        Ok(target) => target,
+        Err(_) => return fail(StatusCode::BAD_REQUEST, "invalid_query"),
+    };
     if req.headers().contains_key("content-encoding") {
-        return error(
+        return fail(
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
             "content_encoding_unsupported",
         );
@@ -463,20 +504,11 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response
     let (parts, body) = req.into_parts();
     let bytes = match axum::body::to_bytes(body, app.config.max_body_bytes).await {
         Ok(b) => b,
-        Err(_) => return error(StatusCode::PAYLOAD_TOO_LARGE, "body_limit"),
+        Err(_) => return fail(StatusCode::PAYLOAD_TOO_LARGE, "body_limit"),
     };
-    let mut value = match document::parse(&bytes) {
-        Ok(v) if v.is_object() => v,
-        _ => return error(StatusCode::BAD_REQUEST, "invalid_json"),
-    };
-    let materialized = match app.config.resolver.materialize(&mut value).await {
-        Ok(c) => c,
-        Err(_) => {
-            return error(
-                StatusCode::UNPROCESSABLE_ENTITY,
-                "attachment_resolution_failed",
-            );
-        }
+    let plan = match spec.classify(&bytes) {
+        Ok(plan) => plan,
+        Err(_) => return fail(StatusCode::BAD_REQUEST, "invalid_json"),
     };
     let scope = preflight::digest(
         parts
@@ -485,8 +517,9 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response
             .map(|v| v.as_bytes())
             .unwrap_or(b"local"),
     );
-    let mut inspection = match document::inspect(
-        value,
+    let (mut inspection, materialized) = match document::inspect_plan(
+        plan,
+        &app.config.resolver,
         &app.scanner,
         &app.attachments,
         &scope,
@@ -495,14 +528,22 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response
     .await
     {
         Ok(v) => v,
-        Err(_) => return error(StatusCode::UNPROCESSABLE_ENTITY, "inspection_incomplete"),
+        Err(e) => match e.downcast_ref::<document::PlanError>() {
+            Some(document::PlanError::Acquisition) => {
+                return fail(
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    "attachment_resolution_failed",
+                );
+            }
+            None => return fail(StatusCode::UNPROCESSABLE_ENTITY, "inspection_incomplete"),
+        },
     };
     inspection.changed |= materialized;
     // No-go clean requests also need their inspected references materialized.
     let original = if materialized && app.config.mode == Mode::NoGo {
         match serde_json::to_vec(&inspection.body) {
             Ok(v) => v,
-            Err(_) => return error(StatusCode::BAD_REQUEST, "serialization_failed"),
+            Err(_) => return fail(StatusCode::BAD_REQUEST, "serialization_failed"),
         }
     } else {
         bytes.to_vec()
@@ -524,8 +565,8 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response
         })
         .collect();
     let finding_count = inspection.rules.len();
-    let mut response = match approve(&original, inspection, app.config.mode, &ids) {
-        Ok(approved) => forward(app, parts.uri.path(), parts.headers, Some(approved), id).await,
+    let mut response = match approve(&original, inspection, app.config.mode, &ids, spec.family) {
+        Ok(approved) => forward(app, &target, parts.headers, Some(approved), id, spec.family).await,
         Err(r) => *r,
     };
     response.headers_mut().insert(
@@ -543,7 +584,15 @@ async fn models(State(live): State<Arc<Live>>, req: Request) -> Response {
     if !authorized(&app, req.headers()) {
         return error(StatusCode::UNAUTHORIZED, "authentication_failed");
     }
-    forward(&app, "/v1/models", req.headers().clone(), None, id).await
+    forward(
+        &app,
+        "/v1/models",
+        req.headers().clone(),
+        None,
+        id,
+        Family::OpenAi,
+    )
+    .await
 }
 fn strip_headers(headers: &mut HeaderMap) {
     let nominated: Vec<String> = headers
@@ -579,7 +628,9 @@ async fn forward(
     mut headers: HeaderMap,
     body: Option<ApprovedRequest>,
     id: RequestId,
+    family: Family,
 ) -> Response {
+    let fail = |status, code| protocol_error(family, status, code);
     strip_headers(&mut headers);
     // Apply after hop-by-hop stripping: Connection must not remove our identity.
     id.set_header(&mut headers);
@@ -587,10 +638,10 @@ async fn forward(
     headers.remove("accept-encoding");
     if let Some(key) = &app.upstream_key {
         match format!("Bearer {key}").parse() {
-            Ok(v) => {
-                headers.insert("authorization", v);
+            Ok(value) => {
+                headers.insert("authorization", value);
             }
-            Err(_) => return error(StatusCode::INTERNAL_SERVER_ERROR, "upstream_configuration"),
+            Err(_) => return fail(StatusCode::INTERNAL_SERVER_ERROR, "upstream_configuration"),
         }
     }
     let url = format!("{}{}", app.config.upstream.trim_end_matches('/'), path);
@@ -602,7 +653,7 @@ async fn forward(
         Ok(upstream) => {
             let status = upstream.status();
             if status.is_redirection() {
-                return error(StatusCode::BAD_GATEWAY, "upstream_redirect_rejected");
+                return fail(StatusCode::BAD_GATEWAY, "upstream_redirect_rejected");
             }
             let mut headers = upstream.headers().clone();
             strip_headers(&mut headers);
@@ -618,7 +669,7 @@ async fn forward(
             *response.headers_mut() = headers;
             response
         }
-        Err(_) => error(StatusCode::BAD_GATEWAY, "upstream_unavailable"),
+        Err(_) => fail(StatusCode::BAD_GATEWAY, "upstream_unavailable"),
     }
 }
 struct ObservedStream {
@@ -685,7 +736,16 @@ mod policy_properties {
             unsafe_findings: true,
         };
         let mode = if no_go { Mode::NoGo } else { Mode::Redact };
-        assert!(approve(b"original", inspection, mode, &["opaque".into()]).is_err());
+        assert!(
+            approve(
+                b"original",
+                inspection,
+                mode,
+                &["opaque".into()],
+                Family::OpenAi
+            )
+            .is_err()
+        );
     }
     #[hegel::test]
     fn advisory_always_preserves_original_bytes_after_complete_inspection(tc: TestCase) {
@@ -697,7 +757,10 @@ mod policy_properties {
             changed: true,
             unsafe_findings: true,
         };
-        let approved = approve(&original, inspection, Mode::Advisory, &[]).unwrap();
+        let approved = approve(&original, inspection, Mode::Advisory, &[], Family::OpenAi).unwrap();
         assert_eq!(approved.bytes, original);
     }
 }
+
+#[cfg(test)]
+mod legacy_http_tests;

@@ -1,0 +1,54 @@
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -303,23 +303,7 @@
+                     }
+                 }
+             });
+-            let router = Router::new()
+-                .route("/healthz", get(|| async { "ok" }))
+-                .route("/readyz", get(|| async { "ok" }))
+-                .route(
+-                    "/metrics",
+-                    get(|| async {
+-                        (
+-                            [("content-type", "text/plain; version=0.0.4")],
+-                            preflight::metrics::render(),
+-                        )
+-                    }),
+-                )
+-                .route("/v1/models", get(models))
+-                .route("/v1/responses", post(infer))
+-                .route("/v1/chat/completions", post(infer))
+-                .layer(axum::middleware::from_fn(correlation::middleware))
+-                .with_state(live);
++            let router = router(live);
+             axum::serve(listener, router)
+                 .with_graceful_shutdown(async {
+                     let _ = tokio::signal::ctrl_c().await;
+@@ -701,3 +685,26 @@
+         assert_eq!(approved.bytes, original);
+     }
+ }
++
++fn router(live: Arc<Live>) -> Router {
++    Router::new()
++        .route("/healthz", get(|| async { "ok" }))
++        .route("/readyz", get(|| async { "ok" }))
++        .route(
++            "/metrics",
++            get(|| async {
++                (
++                    [("content-type", "text/plain; version=0.0.4")],
++                    preflight::metrics::render(),
++                )
++            }),
++        )
++        .route("/v1/models", get(models))
++        .route("/v1/responses", post(infer))
++        .route("/v1/chat/completions", post(infer))
++        .layer(axum::middleware::from_fn(correlation::middleware))
++        .with_state(live)
++}
++
++#[cfg(test)]
++mod legacy_http_tests;

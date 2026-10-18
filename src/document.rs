@@ -419,3 +419,40 @@ mod properties {
         );
     }
 }
+
+/// @cc [owner:ghuntley,label:security] protocol-inspection-plan
+/// Only the body owned by a classified plan MAY be inspected. Legacy plans MUST
+/// use the existing acquisition and document walk without narrower coverage.
+pub async fn inspect_plan(
+    mut plan: crate::protocol::InspectionPlan,
+    resolver: &crate::resolver::Resolver,
+    scanner: &std::sync::Arc<Scanner>,
+    attachments: &Attachments,
+    scope: &str,
+    sanitize: bool,
+) -> Result<(Inspection, bool)> {
+    match plan.content {
+        crate::protocol::Content::Legacy => {
+            let materialized = resolver
+                .materialize(&mut plan.body)
+                .await
+                .map_err(|_| anyhow::anyhow!(PlanError::Acquisition))?;
+            let mut inspection = inspect(plan.body, scanner, attachments, scope, sanitize).await?;
+            inspection.changed |= materialized;
+            Ok((inspection, materialized))
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum PlanError {
+    Acquisition,
+}
+impl std::fmt::Display for PlanError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Acquisition => "attachment_resolution_failed",
+        })
+    }
+}
+impl std::error::Error for PlanError {}
