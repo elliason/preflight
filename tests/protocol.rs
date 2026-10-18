@@ -311,3 +311,241 @@ fn every_split_of_a_jwt_across_adjacent_text_blocks_is_removed(tc: TestCase) {
     assert!(!text.contains(&canary));
     assert!(text == "[REDACTED:jwt]" || text == "[REDACTED:jwt][REDACTED:jwt]");
 }
+
+fn matrix() -> Value {
+    serde_json::from_str(include_str!("fixtures/anthropic-content.json")).unwrap()
+}
+
+#[test]
+fn complete_content_matrix_has_identical_messages_and_count_tokens_plans() {
+    let matrix = matrix();
+    for adapter in [Adapter::Messages, Adapter::CountTokens] {
+        for block in matrix["accepted"].as_array().unwrap() {
+            let body = message(json!([block]));
+            let plan = adapter
+                .route()
+                .classify(&serde_json::to_vec(&body).unwrap())
+                .unwrap();
+            let result = document::inspect_classified(plan, &SCANNER).unwrap();
+            assert_eq!(result.body, body);
+            assert!(!result.changed && result.rules.is_empty());
+            // An undeclared field cannot silently escape the closed classifier.
+            let mut extended = block.clone();
+            extended["future_field"] = json!("visible");
+            assert!(inspect(message(json!([extended]))).is_err());
+        }
+        for fixture in matrix["rejected"].as_array().unwrap() {
+            let body = message(json!([fixture["block"]]));
+            let error = adapter
+                .route()
+                .classify(&serde_json::to_vec(&body).unwrap())
+                .unwrap_err();
+            assert!(
+                error
+                    .to_string()
+                    .contains(fixture["reason"].as_str().unwrap()),
+                "{error}"
+            );
+        }
+    }
+}
+
+#[test]
+fn tool_results_decode_valid_nested_json_and_scan_invalid_json_as_text() {
+    let escaped = jwt()
+        .chars()
+        .map(|c| format!("\\u{:04x}", c as u32))
+        .collect::<String>();
+    for kind in ["tool_result", "mcp_tool_result"] {
+        for content in [
+            format!(r#"{{"value":"{escaped}"}}"#),
+            format!("[ -f x ] && echo {}", jwt()),
+            format!("{{malformed {}", jwt()),
+        ] {
+            let result = inspect(message(
+                json!([{"type":kind,"tool_use_id":"t","content":content}]),
+            ))
+            .unwrap();
+            assert!(result.changed && !result.unsafe_findings);
+            assert!(!result.body.to_string().contains(&jwt()));
+            assert!(!result.body.to_string().contains(&escaped));
+        }
+    }
+}
+
+#[test]
+fn hosted_tool_definitions_are_closed_and_screened() {
+    for kind in [
+        "web_search_20250305",
+        "web_search_20260209",
+        "web_fetch_20250910",
+        "web_fetch_20260209",
+        "code_execution_20250522",
+        "code_execution_20250825",
+        "code_execution_20260120",
+        "bash_20250124",
+        "text_editor_20250124",
+        "text_editor_20250429",
+        "text_editor_20250728",
+        "tool_search_tool_bm25_20251119",
+        "tool_search_tool_regex_20251119",
+    ] {
+        let mut body = message(json!("visible"));
+        body["tools"] = json!([{"type":kind,"name":"lookup","defer_loading":true}]);
+        assert!(inspect(body.clone()).unwrap().rules.is_empty());
+        body["tools"][0]["name"] = json!(jwt());
+        assert!(inspect(body.clone()).unwrap().unsafe_findings);
+        body["tools"][0]["future_field"] = json!("visible");
+        assert!(inspect(body).is_err());
+    }
+}
+
+fn leaf_paths(value: &Value, path: String, paths: &mut Vec<String>) {
+    match value {
+        Value::Object(values) => {
+            for (key, value) in values {
+                leaf_paths(
+                    value,
+                    format!("{path}/{}", key.replace('~', "~0").replace('/', "~1")),
+                    paths,
+                );
+            }
+        }
+        Value::Array(values) => {
+            for (index, value) in values.iter().enumerate() {
+                leaf_paths(value, format!("{path}/{index}"), paths);
+            }
+        }
+        _ => paths.push(path),
+    }
+}
+
+/// @cc [owner:ghuntley,label:testing] matrix-leaf-accounting
+/// Every generated leaf MUST be inspected or rejected. Findings in structural
+/// leaves MUST leave their value unchanged and prohibit enforcing approval.
+#[hegel::test]
+fn matrix_random_leaves_are_edited_or_blocked(tc: TestCase) {
+    let matrix = matrix();
+    let blocks = matrix["accepted"].as_array().unwrap();
+    let mut body = message(json!([blocks[tc.draw(
+        gs::integers::<usize>()
+            .min_value(0)
+            .max_value(blocks.len() - 1)
+    )]]));
+    let mut paths = vec![];
+    leaf_paths(&body, String::new(), &mut paths);
+    let path = &paths[tc.draw(
+        gs::integers::<usize>()
+            .min_value(0)
+            .max_value(paths.len() - 1),
+    )];
+    *body.pointer_mut(path).unwrap() = json!(jwt());
+    if let Ok(result) = inspect(body.clone()) {
+        assert!(!result.rules.is_empty());
+        if result.unsafe_findings {
+            assert_eq!(result.body.pointer(path), body.pointer(path));
+        } else {
+            assert!(!result.body.to_string().contains(&jwt()));
+        }
+    }
+}
+fn split_document(canary: &str, split: usize, nested: bool) -> Value {
+    let block = json!({"type":"document","source":{"type":"content","content":[
+        {"type":"text","text":&canary[..split]}, {"type":"text","text":&canary[split..]}
+    ]}});
+    message(if nested {
+        json!([{"type":"tool_result","tool_use_id":"t","content":[block]}])
+    } else {
+        json!([block])
+    })
+}
+
+#[test]
+fn document_content_reconstructs_split_credentials_before_approval() {
+    for nested in [true, false] {
+        for adapter in [Adapter::Messages, Adapter::CountTokens] {
+            let body = split_document(&jwt(), 1, nested);
+            let result = document::inspect_classified(
+                adapter
+                    .route()
+                    .classify(&serde_json::to_vec(&body).unwrap())
+                    .unwrap(),
+                &SCANNER,
+            )
+            .unwrap();
+            assert!(result.changed && !result.rules.is_empty());
+            assert!(!result.body.to_string().contains(&jwt()[1..]));
+        }
+    }
+}
+
+#[hegel::test]
+fn nested_document_text_reconstructs_every_canary_split(tc: TestCase) {
+    let canary = jwt();
+    let split = tc.draw(gs::integers::<usize>().min_value(0).max_value(canary.len()));
+    let nested = tc.draw(gs::integers::<u8>().min_value(0).max_value(1)) == 1;
+    let result = inspect(split_document(&canary, split, nested)).unwrap();
+    assert!(result.changed && !result.rules.is_empty());
+    let block = &result.body["messages"][0]["content"][0];
+    let document = if nested { &block["content"][0] } else { block };
+    let joined = document["source"]["content"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|block| block["text"].as_str().unwrap())
+        .collect::<String>();
+    assert!(!joined.contains(&canary));
+}
+
+#[test]
+fn editor_lines_screen_multiline_keys_without_changing_array_shape() {
+    let lines = json!([
+        "-----BEGIN PRIVATE KEY-----",
+        "synthetic-fixture",
+        "-----END PRIVATE KEY-----"
+    ]);
+    for adapter in [Adapter::Messages, Adapter::CountTokens] {
+        let body = message(
+            json!([{"type":"text_editor_code_execution_tool_result","tool_use_id":"t","content":{"type":"text_editor_code_execution_str_replace_result","lines":lines}}]),
+        );
+        let result = document::inspect_classified(
+            adapter
+                .route()
+                .classify(&serde_json::to_vec(&body).unwrap())
+                .unwrap(),
+            &SCANNER,
+        )
+        .unwrap();
+        assert!(result.changed && !result.rules.is_empty());
+        assert!(!result.body.to_string().contains("synthetic-fixture"));
+        assert_eq!(
+            result.body["messages"][0]["content"][0]["content"]["lines"]
+                .as_array()
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+}
+
+#[hegel::test]
+fn editor_lines_reconstruct_every_canary_split(tc: TestCase) {
+    let canary = jwt();
+    let split = tc.draw(gs::integers::<usize>().min_value(0).max_value(canary.len()));
+    let body = message(
+        json!([{"type":"text_editor_code_execution_tool_result","tool_use_id":"t","content":{"type":"text_editor_code_execution_str_replace_result","lines":[&canary[..split], &canary[split..]]}}]),
+    );
+    let result = inspect(body).unwrap();
+    assert!(result.changed && !result.rules.is_empty());
+    let lines = result.body["messages"][0]["content"][0]["content"]["lines"]
+        .as_array()
+        .unwrap();
+    assert_eq!(lines.len(), 2);
+    assert!(
+        !lines
+            .iter()
+            .map(|value| value.as_str().unwrap())
+            .collect::<String>()
+            .contains(&canary)
+    );
+}

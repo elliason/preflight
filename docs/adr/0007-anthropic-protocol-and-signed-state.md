@@ -13,7 +13,17 @@ contained no opaque blocks; hosted tools and resumed sessions remain unmeasured.
 Use typed route adapters and closed inspection plans ahead of shared inspection
 and approval. Classify every supplied field or reject it. Legacy Responses and
 Chat Completions keep their parser and walker; only `ApprovedRequest` supplies
-upstream body bytes. Unchanged requests and upstream SSE retain their bytes.
+upstream body bytes. Unchanged requests and upstream SSE retain their bytes. Classified JPEG/PNG/PDF
+sources use the shared attachment inspector; plain document text and nested
+content use the text scanner. The bounded URL resolver pins acquired bytes into
+inline sources in every native mode. Advisory preserves visible text and signed
+state; URL materialization is the sole representation change in that mode.
+URL document sources must contain PDF bytes. GIF/WebP, Files references, and
+undeclared sources reject. Replayed hosted web-search results (`web_search_result`)
+and web-search citations (`web_search_result_location`) reject by type in every
+mode until the opaque-state policy is decided: their API shapes require opaque
+`encrypted_content` and `encrypted_index`, respectively. Web-fetch results with
+inspectable documents remain supported.
 
 Inspect signed `thinking` text, signatures, keys, and structural values without
 rewriting the signed group or authenticating its signature. Findings block in
@@ -41,6 +51,9 @@ costs. Neither optional policy is implemented here.
 
 ## Consequences
 All five captured bodies passed inspection without an opaque-state exception.
-Unknown block families and encrypted-history impact need additional coverage.
+Synthetic fixtures cover citations, nested tool results, visible hosted-tool
+results, MCP use/results, and compaction. Unknown families and unresolved output
+references reject explicitly; encrypted histories still require a maintainer
+policy decision. No hosted-tool or media client capture is claimed.
 Golden HTTP regressions, Hegel properties, and mock-upstream tests guard
 complete-before-forward behavior without adding response observation.

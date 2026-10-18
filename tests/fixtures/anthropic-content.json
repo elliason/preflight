@@ -1,0 +1,1187 @@
+{
+  "accepted": [
+    {
+      "type": "text",
+      "text": "visible"
+    },
+    {
+      "type": "tool_use",
+      "id": "t",
+      "name": "lookup",
+      "input": {
+        "value": "visible"
+      }
+    },
+    {
+      "type": "server_tool_use",
+      "id": "t",
+      "name": "web_search",
+      "input": {
+        "query": "visible"
+      },
+      "caller": {
+        "type": "direct"
+      }
+    },
+    {
+      "type": "mcp_tool_use",
+      "id": "t",
+      "name": "lookup",
+      "server_name": "",
+      "input": {
+        "value": "visible"
+      }
+    },
+    {
+      "type": "tool_result",
+      "tool_use_id": "t",
+      "content": "visible"
+    },
+    {
+      "type": "mcp_tool_result",
+      "tool_use_id": "t",
+      "is_error": false,
+      "content": [
+        {
+          "type": "text",
+          "text": "visible"
+        }
+      ]
+    },
+    {
+      "type": "thinking",
+      "thinking": "visible",
+      "signature": "fake"
+    },
+    {
+      "type": "document",
+      "title": "visible",
+      "context": "visible",
+      "citations": {
+        "enabled": true
+      },
+      "source": {
+        "type": "text",
+        "media_type": "text/plain",
+        "data": "visible"
+      }
+    },
+    {
+      "type": "document",
+      "source": {
+        "type": "content",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      }
+    },
+    {
+      "type": "document",
+      "source": {
+        "type": "content",
+        "content": "visible"
+      }
+    },
+    {
+      "type": "search_result",
+      "title": "visible",
+      "source": "visible",
+      "content": [
+        {
+          "type": "text",
+          "text": "visible"
+        }
+      ],
+      "citations": {
+        "enabled": true
+      }
+    },
+    {
+      "type": "web_fetch_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "web_fetch_result",
+        "url": "",
+        "retrieved_at": "2026-01-01",
+        "content": {
+          "type": "document",
+          "source": {
+            "type": "text",
+            "media_type": "text/plain",
+            "data": "visible"
+          }
+        }
+      }
+    },
+    {
+      "type": "code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "code_execution_result",
+        "stdout": "visible",
+        "stderr": "visible",
+        "return_code": 0,
+        "content": []
+      }
+    },
+    {
+      "type": "bash_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "bash_code_execution_result",
+        "stdout": "visible",
+        "stderr": "visible",
+        "return_code": 0,
+        "content": []
+      }
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_view_result",
+        "file_type": "text",
+        "content": "visible",
+        "start_line": 1,
+        "num_lines": 1,
+        "total_lines": 1
+      }
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_create_result",
+        "is_file_update": false
+      }
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_str_replace_result",
+        "lines": [
+          "visible"
+        ],
+        "old_start": 1,
+        "old_lines": 1,
+        "new_start": 1,
+        "new_lines": 1
+      }
+    },
+    {
+      "type": "tool_search_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "tool_search_tool_search_result",
+        "tool_references": []
+      }
+    },
+    {
+      "type": "compaction",
+      "content": "visible"
+    },
+    {
+      "type": "web_fetch_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "web_fetch_result",
+        "url": "",
+        "retrieved_at": "2026-01-01",
+        "content": {
+          "type": "document",
+          "source": {
+            "type": "text",
+            "media_type": "text/plain",
+            "data": "visible"
+          }
+        }
+      }
+    },
+    {
+      "type": "code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "code_execution_result",
+        "stdout": "visible",
+        "stderr": "visible",
+        "return_code": 0,
+        "content": []
+      }
+    },
+    {
+      "type": "bash_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "bash_code_execution_result",
+        "stdout": "visible",
+        "stderr": "visible",
+        "return_code": 0,
+        "content": []
+      }
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_view_result",
+        "file_type": "text",
+        "content": "visible",
+        "start_line": 1,
+        "num_lines": 1,
+        "total_lines": 1
+      }
+    },
+    {
+      "type": "tool_search_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "tool_search_tool_search_result",
+        "tool_references": []
+      }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "web_search_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      }
+    },
+    {
+      "type": "web_fetch_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "web_fetch_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      }
+    },
+    {
+      "type": "code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "code_execution_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      }
+    },
+    {
+      "type": "bash_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "bash_code_execution_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      }
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      }
+    },
+    {
+      "type": "tool_search_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "tool_search_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      }
+    },
+    {
+      "type": "text",
+      "text": "visible",
+      "citations": [
+        {
+          "type": "char_location",
+          "cited_text": "visible",
+          "document_index": 0,
+          "start_char_index": 0,
+          "end_char_index": 1
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "visible",
+      "citations": [
+        {
+          "type": "page_location",
+          "cited_text": "visible",
+          "document_index": 0,
+          "start_page_number": 1,
+          "end_page_number": 2
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "visible",
+      "citations": [
+        {
+          "type": "content_block_location",
+          "cited_text": "visible",
+          "document_index": 0,
+          "start_block_index": 0,
+          "end_block_index": 1
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "visible",
+      "citations": [
+        {
+          "type": "search_result_location",
+          "cited_text": "visible",
+          "search_result_index": 0,
+          "start_block_index": 0,
+          "end_block_index": 1
+        }
+      ]
+    },
+    {
+      "type": "tool_result",
+      "tool_use_id": "t",
+      "content": [
+        {
+          "type": "document",
+          "title": "visible",
+          "context": "visible",
+          "citations": {
+            "enabled": true
+          },
+          "source": {
+            "type": "text",
+            "media_type": "text/plain",
+            "data": "visible"
+          }
+        },
+        {
+          "type": "search_result",
+          "title": "visible",
+          "source": "visible",
+          "content": [
+            {
+              "type": "text",
+              "text": "visible"
+            }
+          ],
+          "citations": {
+            "enabled": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "document",
+      "title": null,
+      "context": null,
+      "citations": {
+        "enabled": true
+      },
+      "source": {
+        "type": "text",
+        "media_type": "text/plain",
+        "data": "visible"
+      }
+    },
+    {
+      "type": "document",
+      "source": {
+        "type": "content",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "title": null,
+      "context": null
+    },
+    {
+      "type": "document",
+      "source": {
+        "type": "content",
+        "content": "visible"
+      },
+      "title": null,
+      "context": null
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_view_result",
+        "file_type": "text",
+        "content": "visible",
+        "start_line": null,
+        "num_lines": null,
+        "total_lines": null
+      }
+    },
+    {
+      "type": "text_editor_code_execution_tool_result",
+      "tool_use_id": "t",
+      "content": {
+        "type": "text_editor_code_execution_str_replace_result",
+        "lines": null,
+        "old_start": null,
+        "old_lines": null,
+        "new_start": null,
+        "new_lines": null
+      }
+    },
+    {
+      "type": "compaction",
+      "content": null
+    }
+  ],
+  "rejected": [
+    {
+      "block": {
+        "type": "redacted_thinking"
+      },
+      "reason": "redacted_thinking"
+    },
+    {
+      "block": {
+        "type": "encrypted_code_execution_result"
+      },
+      "reason": "encrypted_code_execution_result"
+    },
+    {
+      "block": {
+        "type": "container_upload"
+      },
+      "reason": "container_upload"
+    },
+    {
+      "block": {
+        "type": "tool_reference"
+      },
+      "reason": "tool_reference"
+    },
+    {
+      "block": {
+        "type": "code_execution_output"
+      },
+      "reason": "code_execution_output"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_output"
+      },
+      "reason": "bash_code_execution_output"
+    },
+    {
+      "block": {
+        "type": "mcp_tool_listing"
+      },
+      "reason": "mcp_tool_listing"
+    },
+    {
+      "block": {
+        "type": "advisor_tool_result"
+      },
+      "reason": "advisor"
+    },
+    {
+      "block": {
+        "type": "advisor_result"
+      },
+      "reason": "advisor"
+    },
+    {
+      "block": {
+        "type": "advisor_redacted_result"
+      },
+      "reason": "advisor"
+    },
+    {
+      "block": {
+        "type": "browser_state"
+      },
+      "reason": "browser_state"
+    },
+    {
+      "block": {
+        "type": "fallback"
+      },
+      "reason": "fallback"
+    },
+    {
+      "block": {
+        "type": "future_block"
+      },
+      "reason": "unknown"
+    },
+    {
+      "block": {
+        "type": "image",
+        "source": {
+          "type": "base64",
+          "media_type": "image/gif",
+          "data": "fake"
+        }
+      },
+      "reason": "GIF"
+    },
+    {
+      "block": {
+        "type": "image",
+        "source": {
+          "type": "base64",
+          "media_type": "image/webp",
+          "data": "fake"
+        }
+      },
+      "reason": "WebP"
+    },
+    {
+      "block": {
+        "type": "image",
+        "source": {
+          "type": "base64",
+          "media_type": "image/tiff",
+          "data": "fake"
+        }
+      },
+      "reason": "media_type"
+    },
+    {
+      "block": {
+        "type": "image",
+        "source": {
+          "type": "file",
+          "file_id": "fake"
+        }
+      },
+      "reason": "file_id"
+    },
+    {
+      "block": {
+        "type": "image",
+        "file_id": "fake"
+      },
+      "reason": "file_id"
+    },
+    {
+      "block": {
+        "type": "image",
+        "source": {
+          "type": "unknown"
+        }
+      },
+      "reason": "source"
+    },
+    {
+      "block": {
+        "type": "document",
+        "source": {
+          "type": "file",
+          "file_id": "fake"
+        }
+      },
+      "reason": "file_id"
+    },
+    {
+      "block": {
+        "type": "document",
+        "file_id": "fake"
+      },
+      "reason": "file_id"
+    },
+    {
+      "block": {
+        "type": "document",
+        "source": {
+          "type": "unknown"
+        }
+      },
+      "reason": "source"
+    },
+    {
+      "block": {
+        "type": "text",
+        "text": "visible",
+        "citations": [
+          {
+            "type": "web_search_result_location",
+            "encrypted_index": "fake"
+          }
+        ]
+      },
+      "reason": "web_search_result_location"
+    },
+    {
+      "block": {
+        "type": "web_search_result",
+        "title": "visible",
+        "url": "",
+        "encrypted_content": "fake"
+      },
+      "reason": "web_search_result"
+    },
+    {
+      "block": {
+        "type": "web_fetch_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "web_fetch_result",
+          "encrypted_content": "fake"
+        }
+      },
+      "reason": "opaque provider state"
+    },
+    {
+      "block": {
+        "type": "code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "code_execution_result",
+          "encrypted_stdout": "fake"
+        }
+      },
+      "reason": "opaque provider state"
+    },
+    {
+      "block": {
+        "type": "document",
+        "source": {
+          "type": "content",
+          "content": [
+            {
+              "type": "document"
+            }
+          ]
+        }
+      },
+      "reason": "document"
+    },
+    {
+      "block": {
+        "type": "tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "container_upload",
+            "file_id": "fake"
+          }
+        ]
+      },
+      "reason": "container_upload"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text_editor_code_execution_view_result",
+          "file_type": "image",
+          "content": "fake"
+        }
+      },
+      "reason": "text_editor_code_execution_view_result"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text_editor_code_execution_view_result",
+          "file_type": "unknown",
+          "content": "fake"
+        }
+      },
+      "reason": "text_editor_code_execution_view_result"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "bash_code_execution_result",
+          "encrypted_stdout": "fake"
+        }
+      },
+      "reason": "opaque provider state"
+    },
+    {
+      "block": {
+        "type": "web_search_result",
+        "title": "visible",
+        "url": "",
+        "page_age": "recent"
+      },
+      "reason": "web_search_result requires opaque encrypted_content"
+    },
+    {
+      "block": {
+        "type": "web_fetch_result",
+        "url": "",
+        "retrieved_at": "2026-01-01",
+        "content": {
+          "type": "document",
+          "source": {
+            "type": "text",
+            "media_type": "text/plain",
+            "data": "visible"
+          }
+        }
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "code_execution_result",
+        "stdout": "visible",
+        "stderr": "visible",
+        "return_code": 0,
+        "content": []
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_result",
+        "stdout": "visible",
+        "stderr": "visible",
+        "return_code": 0,
+        "content": []
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_view_result",
+        "file_type": "text",
+        "content": "visible",
+        "start_line": 1,
+        "num_lines": 1,
+        "total_lines": 1
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_create_result",
+        "is_file_update": false
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_str_replace_result",
+        "lines": [
+          "visible"
+        ],
+        "old_start": 1,
+        "old_lines": 1,
+        "new_start": 1,
+        "new_lines": 1
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "tool_search_tool_search_result",
+        "tool_references": []
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "web_search_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "web_search_result",
+            "title": "visible",
+            "url": "",
+            "page_age": "recent"
+          }
+        ]
+      },
+      "reason": "web_search_result requires opaque encrypted_content"
+    },
+    {
+      "block": {
+        "type": "web_search_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "web_fetch_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "code_execution_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "tool_search_tool_result_error",
+        "error_code": "unavailable",
+        "error_message": "visible"
+      },
+      "reason": "matching parent"
+    },
+    {
+      "block": {
+        "type": "text",
+        "text": "visible",
+        "citations": [
+          {
+            "type": "web_search_result_location",
+            "cited_text": "visible",
+            "url": "",
+            "title": "visible"
+          }
+        ]
+      },
+      "reason": "web_search_result_location requires opaque encrypted_index"
+    },
+    {
+      "block": {
+        "type": "web_search_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "web_search_result",
+            "url": "",
+            "title": "visible",
+            "page_age": null
+          }
+        ]
+      },
+      "reason": "web_search_result requires opaque encrypted_content"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text",
+          "text": "visible"
+        }
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "bash_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "bash_code_execution_result",
+            "stdout": "visible",
+            "stderr": "visible",
+            "return_code": 0,
+            "content": []
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text",
+          "text": "visible"
+        }
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "code_execution_result",
+            "stdout": "visible",
+            "stderr": "visible",
+            "return_code": 0,
+            "content": []
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text",
+          "text": "visible"
+        }
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "text_editor_code_execution_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text_editor_code_execution_view_result",
+            "file_type": "text",
+            "content": "visible",
+            "start_line": 1,
+            "num_lines": 1,
+            "total_lines": 1
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "tool_search_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text",
+          "text": "visible"
+        }
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "tool_search_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "tool_search_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "tool_search_tool_search_result",
+            "tool_references": []
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "web_fetch_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text",
+          "text": "visible"
+        }
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "web_fetch_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "web_fetch_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "web_fetch_result",
+            "url": "",
+            "retrieved_at": "2026-01-01",
+            "content": {
+              "type": "document",
+              "source": {
+                "type": "text",
+                "media_type": "text/plain",
+                "data": "visible"
+              }
+            }
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "web_search_tool_result",
+        "tool_use_id": "t",
+        "content": {
+          "type": "text",
+          "text": "visible"
+        }
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "web_search_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "text",
+            "text": "visible"
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "mcp_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "document",
+            "title": "visible",
+            "context": "visible",
+            "citations": {
+              "enabled": true
+            },
+            "source": {
+              "type": "text",
+              "media_type": "text/plain",
+              "data": "visible"
+            }
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "mcp_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "search_result",
+            "title": "visible",
+            "source": "visible",
+            "content": [
+              {
+                "type": "text",
+                "text": "visible"
+              }
+            ],
+            "citations": {
+              "enabled": true
+            }
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    },
+    {
+      "block": {
+        "type": "mcp_tool_result",
+        "tool_use_id": "t",
+        "content": [
+          {
+            "type": "image",
+            "source": {
+              "type": "base64",
+              "media_type": "image/png",
+              "data": "fake"
+            }
+          }
+        ]
+      },
+      "reason": "unsupported for this parent"
+    }
+  ]
+}

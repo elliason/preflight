@@ -76,8 +76,51 @@ pub enum Content {
     Object(Vec<(String, Content)>),
     Array(Vec<Content>),
     TextBlocks(Vec<Content>),
+    TextLines(Vec<Content>),
     SignedGroup,
     OpaqueGroup,
-    Attachment,
+    Attachment(AttachmentSource),
+    /// Payload bytes have completed inspection; only source controls remain scan-only.
+    InspectedSource,
     Unsupported,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum AttachmentSource {
+    Base64(MediaType),
+    Url { image: bool },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MediaType {
+    Jpeg,
+    Png,
+    Pdf,
+    Text,
+}
+impl MediaType {
+    pub fn mime(self) -> &'static str {
+        match self {
+            Self::Jpeg => "image/jpeg",
+            Self::Png => "image/png",
+            Self::Pdf => "application/pdf",
+            Self::Text => "text/plain",
+        }
+    }
+    pub fn detect(bytes: &[u8]) -> Option<Self> {
+        if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+            Some(Self::Png)
+        } else if bytes.starts_with(&[0xff, 0xd8, 0xff]) {
+            Some(Self::Jpeg)
+        } else if bytes.starts_with(b"%PDF-") {
+            Some(Self::Pdf)
+        } else if std::str::from_utf8(bytes).is_ok_and(|s| {
+            s.chars()
+                .all(|c| !c.is_control() || matches!(c, '\n' | '\r' | '\t'))
+        }) {
+            Some(Self::Text)
+        } else {
+            None
+        }
+    }
 }

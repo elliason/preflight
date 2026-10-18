@@ -489,3 +489,210 @@ async fn native_policy_errors_are_static_and_advisory_keeps_editable_originals()
         }
     }
 }
+
+#[tokio::test]
+async fn matrix_rejections_never_forward_in_any_mode_or_native_route() {
+    let matrix: Value =
+        serde_json::from_str(include_str!("../tests/fixtures/anthropic-content.json")).unwrap();
+    let captured = Arc::new(Mutex::new(Vec::<Captured>::new()));
+    let seen = captured.clone();
+    let upstream = Router::new().fallback(move |uri: Uri, headers: HeaderMap, body: Bytes| {
+        let seen = seen.clone();
+        async move {
+            seen.lock().unwrap().push(Captured { uri, headers, body });
+            axum::Json(json!({"ok":true}))
+        }
+    });
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let upstream_address = listener.local_addr().unwrap();
+    let upstream_task = tokio::spawn(async move { axum::serve(listener, upstream).await.unwrap() });
+    for mode in [Mode::Redact, Mode::NoGo, Mode::Advisory] {
+        let temp = tempfile::tempdir().unwrap();
+        let live = Arc::new(Live {
+            current: RwLock::new(Arc::new(app(
+                temp.path(),
+                format!("http://{upstream_address}"),
+                mode,
+            ))),
+        });
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let proxy = tokio::spawn(async move { axum::serve(listener, router(live)).await.unwrap() });
+        let client = reqwest::Client::new();
+        for adapter in [Adapter::Messages, Adapter::CountTokens] {
+            let url = format!("http://{address}{}", adapter.route().path);
+            for block in matrix["accepted"].as_array().unwrap() {
+                let body =
+                    json!({"model":"fixture","messages":[{"role":"user","content":[block]}]});
+                let original = serde_json::to_vec(&body).unwrap();
+                let response = client
+                    .post(&url)
+                    .header("x-api-key", "local-fixture-key")
+                    .body(original.clone())
+                    .send()
+                    .await
+                    .unwrap();
+                assert_eq!(response.status(), 200, "{block}");
+                assert_eq!(
+                    captured.lock().unwrap().last().unwrap().body.as_ref(),
+                    original
+                );
+            }
+            let canary = jwt();
+            for block in [
+                json!({"type":"document","source":{"type":"content","content":[{"type":"text","text":&canary[..1]},{"type":"text","text":&canary[1..]}]}}),
+                json!({"type":"text_editor_code_execution_tool_result","tool_use_id":"t","content":{"type":"text_editor_code_execution_str_replace_result","lines":[&canary[..1], &canary[1..]]}}),
+            ] {
+                let before = captured.lock().unwrap().len();
+                let body =
+                    json!({"model":"fixture","messages":[{"role":"user","content":[block]}]});
+                let response = client
+                    .post(&url)
+                    .header("x-api-key", "local-fixture-key")
+                    .json(&body)
+                    .send()
+                    .await
+                    .unwrap();
+                if mode == Mode::NoGo {
+                    assert_eq!(response.status(), 400);
+                    assert_eq!(captured.lock().unwrap().len(), before);
+                } else {
+                    assert_eq!(response.status(), 200);
+                    let sent: Value =
+                        serde_json::from_slice(&captured.lock().unwrap().last().unwrap().body)
+                            .unwrap();
+                    if mode == Mode::Advisory {
+                        assert_eq!(sent, body);
+                    } else {
+                        assert!(!sent.to_string().contains(&canary[1..]));
+                    }
+                }
+            }
+            let mut rejected = matrix["rejected"].as_array().unwrap().clone();
+            for block in matrix["accepted"].as_array().unwrap() {
+                let mut block = block.clone();
+                block["future_field"] = json!("visible");
+                rejected.push(json!({"block":block,"reason":"unsupported"}));
+            }
+            for (source, reason) in [
+                (
+                    json!({"type":"base64","media_type":"image/png","data":"!"}),
+                    "base64",
+                ),
+                (
+                    json!({"type":"base64","media_type":"image/png","data":"dGV4dA=="}),
+                    "media_type",
+                ),
+                (json!({"type":"url","url":"http://127.0.0.1/"}), "inspected"),
+                (
+                    json!({"type":"url","url":"https://127.0.0.1/"}),
+                    "inspected",
+                ),
+                (
+                    json!({"type":"base64","media_type":"image/png","data":"iVBORw0KGgo="}),
+                    "inspected",
+                ),
+            ] {
+                rejected.push(json!({"block":{"type":"image","source":source},"reason":reason}));
+            }
+            for fixture in rejected {
+                let before = captured.lock().unwrap().len();
+                let body = json!({"model":"fixture","messages":[{"role":"user","content":[{"type":"text","text":"visible"},fixture["block"]]}]});
+                let response = client
+                    .post(&url)
+                    .header("x-api-key", "local-fixture-key")
+                    .json(&body)
+                    .send()
+                    .await
+                    .unwrap();
+                assert!(response.status().is_client_error(), "{fixture}");
+                let error: Value = response.json().await.unwrap();
+                assert_eq!(error["type"], "error");
+                assert!(
+                    error["error"]["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains(fixture["reason"].as_str().unwrap()),
+                    "{error} {fixture}"
+                );
+                assert_eq!(captured.lock().unwrap().len(), before);
+            }
+        }
+        proxy.abort();
+    }
+    upstream_task.abort();
+}
+
+#[hegel::test]
+fn matrix_approved_bytes_never_contain_an_injected_leaf_canary(tc: hegel::TestCase) {
+    use hegel::generators as gs;
+    fn paths(value: &Value, path: String, out: &mut Vec<String>) {
+        match value {
+            Value::Object(values) => {
+                for (key, value) in values {
+                    paths(value, format!("{path}/{key}"), out);
+                }
+            }
+            Value::Array(values) => {
+                for (index, value) in values.iter().enumerate() {
+                    paths(value, format!("{path}/{index}"), out);
+                }
+            }
+            _ => out.push(path),
+        }
+    }
+    static SCANNER: std::sync::LazyLock<Scanner> =
+        std::sync::LazyLock::new(|| Scanner::new(HashSet::new()).unwrap());
+    let matrix: Value =
+        serde_json::from_str(include_str!("../tests/fixtures/anthropic-content.json")).unwrap();
+    fn needs_acquisition(value: &Value) -> bool {
+        match value {
+            Value::Object(fields) => {
+                fields
+                    .get("source")
+                    .is_some_and(|source| matches!(source["type"].as_str(), Some("base64" | "url")))
+                    || fields.values().any(needs_acquisition)
+            }
+            Value::Array(values) => values.iter().any(needs_acquisition),
+            _ => false,
+        }
+    }
+    let accepted: Vec<_> = matrix["accepted"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|block| !needs_acquisition(block))
+        .collect();
+    assert!(!accepted.is_empty());
+    let mut body = json!({"model":"fixture","messages":[{"role":"user","content":[accepted[tc.draw(gs::integers::<usize>().min_value(0).max_value(accepted.len()-1))]]}]});
+    let mut leaves = vec![];
+    paths(&body, String::new(), &mut leaves);
+    *body
+        .pointer_mut(
+            &leaves[tc.draw(
+                gs::integers::<usize>()
+                    .min_value(0)
+                    .max_value(leaves.len() - 1),
+            )],
+        )
+        .unwrap() = json!(jwt());
+    let original = serde_json::to_vec(&body).unwrap();
+    for adapter in [Adapter::Messages, Adapter::CountTokens] {
+        for mode in [Mode::Redact, Mode::NoGo] {
+            // The matrix contains text-only sources. Inspection failure for a
+            // classified fixture is a test failure, never an implicit rejection.
+            let plan = match adapter.route().classify(&original) {
+                Ok(plan) => plan,
+                Err(_) => continue, // Explicitly rejected before approval.
+            };
+            let inspection = document::inspect_classified(plan, &SCANNER)
+                .expect("classified text fixture must complete inspection");
+            match approve(&original, inspection, mode, &[], Family::Anthropic) {
+                Err(_) => {} // Explicitly rejected by enforcing policy.
+                Ok(approved) => {
+                    assert!(!String::from_utf8(approved.bytes).unwrap().contains(&jwt()))
+                }
+            }
+        }
+    }
+}

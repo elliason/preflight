@@ -493,6 +493,17 @@ fn protocol_error(family: Family, status: StatusCode, code: &'static str) -> Res
     response
 }
 
+// Reasons originate only from the closed classifier and source codecs.
+fn native_content_error(reason: &'static str) -> Response {
+    let mut response = (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!({
+        "type":"error", "error":{"type":"invalid_request_error", "message":format!("preflight: {reason}.")}
+    }))).into_response();
+    response
+        .headers_mut()
+        .insert("x-should-retry", "false".parse().unwrap());
+    response
+}
+
 fn native_credentials(headers: &HeaderMap) -> Result<(Option<&str>, Option<&str>)> {
     for name in ["authorization", "x-api-key"] {
         anyhow::ensure!(
@@ -736,7 +747,14 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
         {
             return fail(StatusCode::BAD_REQUEST, "unsupported_content");
         }
-        Err(_) => return fail(StatusCode::BAD_REQUEST, "invalid_json"),
+        Err(e) => {
+            if let Some(document::PlanError::Content(reason)) =
+                e.downcast_ref::<document::PlanError>()
+            {
+                return native_content_error(reason);
+            }
+            return fail(StatusCode::BAD_REQUEST, "invalid_json");
+        }
     };
     let scope = preflight::digest(
         parts
@@ -759,6 +777,7 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
         &app.attachments,
         &scope,
         app.config.mode == Mode::Redact,
+        app.config.mode != Mode::Advisory,
     )
     .await
     {
@@ -767,6 +786,7 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
             Some(document::PlanError::Unsupported) => {
                 return fail(StatusCode::BAD_REQUEST, "unsupported_content");
             }
+            Some(document::PlanError::Content(reason)) => return native_content_error(reason),
             Some(document::PlanError::Acquisition) => {
                 return fail(
                     StatusCode::UNPROCESSABLE_ENTITY,
@@ -777,8 +797,11 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId, spec: Route
         },
     };
     inspection.changed |= materialized;
-    // No-go clean requests also need their inspected references materialized.
-    let original = if materialized && app.config.mode == Mode::NoGo {
+    // Native URL sources are pinned even in advisory mode; visible text stays original.
+    let original = if materialized
+        && (app.config.mode == Mode::NoGo
+            || spec.family == Family::Anthropic && app.config.mode == Mode::Advisory)
+    {
         match serde_json::to_vec(&inspection.body) {
             Ok(v) => v,
             Err(_) => return fail(StatusCode::BAD_REQUEST, "serialization_failed"),
