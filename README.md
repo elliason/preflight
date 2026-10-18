@@ -243,6 +243,12 @@ Defaults cover AWS access-key IDs, GitHub PATs, OpenAI, Anthropic, Google/Gemini
 
 Property-name and control-field findings are rejected in enforcing modes when rewriting them would change request semantics.
 
+Responses reasoning and compaction items in the top-level `input` array keep their
+opaque `encrypted_content` strings unchanged. JSON- and `data:`-shaped values keep
+ordinary inspection. Literal findings or matches to an attachment with findings
+reject the whole request in enforcing modes. This does not inspect ciphertext
+plaintext. See [ADR 0007](docs/adr/0007-responses-opaque-state.md).
+
 ## Attachments
 
 All project-owned executables are Rust. The worker uses typed subprocess adapters for Poppler, QPDF, Tesseract, ExifTool, and ZBar; Rust image codecs handle JPEG/PNG and `lopdf` constructs replacement PDFs. Nix pins the toolchain.
