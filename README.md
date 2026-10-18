@@ -174,19 +174,51 @@ headers are preserved (at most 32 beta entries). Generated errors use Anthropic'
 The complete request is inspected before any upstream bytes are sent;
 upstream JSON and SSE responses pass through unchanged, including unknown events.
 
-| request content | initial support |
+| request content | support |
 |---|---|
 | `system`, message strings, `text` blocks | inspect and redact editable text; reconstruct adjacent text parts |
-| `tool_use.input` | inspect arbitrary JSON keys and values; decode valid nested JSON strings, otherwise inspect as text |
-| `tool_result.content` | strings or text blocks |
-| tool definitions | descriptions editable; names, schema keys and constraints such as type/enum/const scan-only |
+| `tool_use`, `server_tool_use`, `mcp_tool_use` inputs | inspect JSON values and valid nested JSON strings; identifiers and keys scan-only |
+| `tool_result` content | strings (including valid nested JSON), or text/image/document/search-result blocks |
+| `mcp_tool_result` content | strings (including valid nested JSON), or text-only block arrays |
+| tool definitions | custom and declared hosted families; descriptions editable; identifiers, schemas, limits, domains, and caller controls scan-only |
 | `cache_control` | preserved and scanned; surrounding content is still inspected |
 | `context_management` | scan-only `edits` with `clear_thinking_20251015` and `keep: "all"` |
 | `output_config` | scan-only `effort` (`low`, `medium`, `high`, `max`) |
 | request `thinking`, `metadata` | scan-only controls, including adaptive thinking/display and `user_id` |
 | signed `thinking` | preserve the whole group; findings block in enforcing modes; advisory forwards original bytes |
-| images, documents, file references, hosted-tool results, other block types | unsupported in this initial slice; reject |
+| `image` | base64 JPEG/PNG or bounded URL acquisition; worker inspection and verified reconstruction; GIF/WebP reject |
+| `document` | base64 PDF, PDF URL, plain text, or text/image content blocks; nullable title/context editable when present; adjacent text reconstructed |
+| non-web-search text citations, `search_result` | visible cited text/title/source editable; numeric locations and linkage preserved |
+| web-fetch results | fetched documents and errors inspected under the matching result parent |
+| hosted web-search results and web-search citations | `web_search_result` and `web_search_result_location` reject by type pending the opaque-state policy |
+| code execution/bash/editor results | stdout/stderr/text and ordered editor lines inspected; return codes/locations preserved; editor views require text file type |
+| tool-search results | visible errors inspected; unresolved tool references reject |
+| `compaction` | nullable visible content inspected when present; undeclared continuity fields reject |
+| Files `file_id`, `container_upload`, output-file references | reject as unresolved references |
+| MCP listing, browser state, fallback, advisor results, unknown families | reject explicitly |
 | `redacted_thinking` and encrypted provider state | reject pending the [opaque-state decision](docs/adr/0007-anthropic-protocol-and-signed-state.md) |
+
+Hosted result children must match their parent; nested-only result and error types
+reject at message level. MCP results accept text-only content arrays. Nullable
+editor line/location fields are preserved. Replayed hosted web-search results and
+web-search citations reject in every mode until the opaque-state policy is
+decided: their API shapes require opaque `encrypted_content` and
+`encrypted_index`, respectively. Missing opaque fields do not bypass rejection.
+
+Base64 sources retain their shape after reconstruction; the returned bytes determine
+`media_type` (the worker rebuilds sanitized JPEG as PNG). URL sources use the shared
+HTTPS-only resolver with public-address checks, DNS pinning, no redirects or
+credentials, and bounded downloads. Every source occurrence counts toward the
+16-attachment / 64 MiB decoded request limit, including repeated URLs. Inspected
+URL bytes become inline sources in every native mode; advisory leaves visible
+text unchanged, but URL materialization changes request bytes even in advisory
+mode. URL documents must contain PDF bytes. Source control findings reject before
+URL acquisition in enforcing modes; encoded `data` is never scanned as text.
+No inference request is sent if acquisition, decoding, MIME validation, or worker
+inspection fails.
+
+Nested JSON strings that need redaction are re-serialized; extremely large
+integers can lose precision, as with the legacy walker.
 
 Unknown request fields also reject. This is limited protocol support, not complete
 Claude Code feature coverage: histories containing unsupported blocks remain
@@ -194,14 +226,18 @@ blocked. Token counts describe the screened request and can change after redacti
 Sanitized fixtures cover five requests captured from Claude Code 2.1.302 against
 a local stub: streamed text, a Read tool result, and signed-thinking replay.
 All five original bodies passed adapter inspection without changes. The capture
-observed no opaque blocks, model discovery, or count-tokens requests.
+observed no opaque blocks, model discovery, or count-tokens requests. Additional
+synthetic fixtures cover the content matrix on both native routes, including
+no-forward cases and generated canary/structure properties. Hosted-tool, media,
+and beta support has not been validated against additional client captures.
 
 Configure the same local key in the client's bearer or `x-api-key` header. Both
 headers may be supplied only with matching values; duplicate or conflicting
-credentials reject. When a local key is configured, an upstream key is required:
+credentials reject. When a local key is configured, an upstream key is required.
 Configuration load and reload reject a missing replacement and empty or invalid
-`PREFLIGHT_CLIENT_KEY` / `PREFLIGHT_UPSTREAM_KEY` header values. This also rejects the previously accepted OpenAI-only setup
-that forwarded the local bearer key upstream. The local credential is stripped
+`PREFLIGHT_CLIENT_KEY` / `PREFLIGHT_UPSTREAM_KEY` header values. This also rejects
+the previously accepted OpenAI-only setup that forwarded the local bearer key
+upstream. The local credential is stripped
 and the replacement uses `anthropic_upstream_auth`: `x-api-key` (default) or
 `bearer`. Unknown auth forms reject during configuration load/reload.
 With neither key configured, one native credential can pass through. OpenAI
