@@ -1,4 +1,5 @@
 //! Attachment retrieval is separate from networkless document processing.
+use crate::document::{Format, Position};
 use anyhow::{Context, Result, bail};
 use base64::Engine;
 use futures::StreamExt;
@@ -45,19 +46,29 @@ impl Resolver {
     /// Remote attachment references MUST be replaced by the exact acquired bytes.
     /// Arbitrary URL retrieval MUST NOT send inference or provider credentials.
     pub async fn materialize(&self, value: &mut Value) -> Result<bool> {
-        self.inner(value, &mut Budget::default(), 0).await
+        self.materialize_with_format(value, Format::Json).await
+    }
+    /// @cc [owner:ghuntley,label:security] opaque-state-is-not-an-attachment
+    /// Scoped Responses opaque strings MUST NOT be parsed, acquired or rewritten.
+    /// Values starting with data: or whose trimmed form starts with { or [ MUST
+    /// retain ordinary nested-JSON parsing and attachment resolution.
+    pub async fn materialize_with_format(&self, value: &mut Value, format: Format) -> Result<bool> {
+        self.inner(value, &mut Budget::default(), 0, format.position())
+            .await
     }
     fn inner<'a>(
         &'a self,
         value: &'a mut Value,
         budget: &'a mut Budget,
         depth: usize,
+        position: Position,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<bool>> + Send + 'a>> {
         Box::pin(async move {
             anyhow::ensure!(depth <= 64, "nesting_limit");
             let mut changed = false;
             match value {
                 Value::Object(map) => {
+                    let opaque = position.opaque_item(map);
                     if let Some(id) = map
                         .get("file_id")
                         .and_then(Value::as_str)
@@ -116,6 +127,9 @@ impl Resolver {
                         changed = true;
                     }
                     for (key, v) in map.iter_mut() {
+                        if opaque && key == "encrypted_content" && v.is_string() {
+                            continue;
+                        }
                         if key == "image_url"
                             && let Some(url) = v
                                 .as_str()
@@ -136,19 +150,23 @@ impl Resolver {
                             v["url"] = data_url(&budget.url(&url).await?).into();
                             changed = true;
                         }
-                        changed |= self.inner(v, budget, depth + 1).await?;
+                        changed |= self
+                            .inner(v, budget, depth + 1, position.field(key))
+                            .await?;
                     }
                 }
                 Value::Array(a) => {
                     for v in a {
-                        changed |= self.inner(v, budget, depth + 1).await?;
+                        changed |= self.inner(v, budget, depth + 1, position.element()).await?;
                     }
                 }
                 Value::String(s)
                     if s.trim_start().starts_with('{') || s.trim_start().starts_with('[') =>
                 {
                     if let Ok(mut inner) = crate::document::parse(s.as_bytes())
-                        && self.inner(&mut inner, budget, depth + 1).await?
+                        && self
+                            .inner(&mut inner, budget, depth + 1, Position::Other)
+                            .await?
                     {
                         *s = serde_json::to_string(&inner)?;
                         changed = true;

@@ -469,7 +469,17 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response
         Ok(v) if v.is_object() => v,
         _ => return error(StatusCode::BAD_REQUEST, "invalid_json"),
     };
-    let materialized = match app.config.resolver.materialize(&mut value).await {
+    let format = if parts.uri.path() == "/v1/responses" {
+        document::Format::Responses
+    } else {
+        document::Format::Json
+    };
+    let materialized = match app
+        .config
+        .resolver
+        .materialize_with_format(&mut value, format)
+        .await
+    {
         Ok(c) => c,
         Err(_) => {
             return error(
@@ -485,12 +495,13 @@ async fn inspect_and_forward(app: &App, req: Request, id: RequestId) -> Response
             .map(|v| v.as_bytes())
             .unwrap_or(b"local"),
     );
-    let mut inspection = match document::inspect(
+    let mut inspection = match document::inspect_with_format(
         value,
         &app.scanner,
         &app.attachments,
         &scope,
         app.config.mode == Mode::Redact,
+        format,
     )
     .await
     {
@@ -669,6 +680,9 @@ impl Drop for ObservedStream {
         }
     }
 }
+
+#[cfg(test)]
+mod responses_tests;
 
 #[cfg(test)]
 mod policy_properties {
