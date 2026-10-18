@@ -555,3 +555,80 @@ async fn proxy_preserves_clean_bytes_redacts_and_blocks_without_forwarding() {
     }
     server.abort();
 }
+
+#[tokio::test]
+async fn native_image_pdf_sources_are_inspected_and_rebuilt() {
+    use preflight::{document, protocol::Adapter, resolver::Resolver};
+    use serde_json::json;
+    let temp = tempfile::tempdir().unwrap();
+    let mut e = engine(temp.path());
+    e.allow_page_redaction = true;
+    let screenshot = common::screenshot(&token());
+    let mut media = vec![(
+        "document",
+        "application/pdf",
+        common::scanned_pdf(&screenshot),
+    )];
+    for (format, mime) in [
+        (image::ImageFormat::Png, "image/png"),
+        (image::ImageFormat::Jpeg, "image/jpeg"),
+    ] {
+        let mut bytes = std::io::Cursor::new(Vec::new());
+        screenshot.write_to(&mut bytes, format).unwrap();
+        media.push(("image", mime, bytes.into_inner()));
+    }
+    for adapter in [Adapter::Messages, Adapter::CountTokens] {
+        for (kind, mime, bytes) in &media {
+            let block = json!({"type":kind,"source":{"type":"base64","media_type":mime,"data":base64::engine::general_purpose::STANDARD.encode(bytes)}});
+            for content in [
+                json!([block]),
+                json!([{"type":"tool_result","tool_use_id":"t","content":[block]}]),
+            ] {
+                let body =
+                    json!({"model":"fixture","messages":[{"role":"user","content":content}]});
+                let plan = adapter
+                    .route()
+                    .classify(&serde_json::to_vec(&body).unwrap())
+                    .unwrap();
+                let (result, materialized) = document::inspect_plan(
+                    plan,
+                    &Resolver::default(),
+                    &e.scanner,
+                    &e,
+                    "fixture",
+                    true,
+                    true,
+                )
+                .await
+                .unwrap();
+                assert!(!materialized && result.changed && !result.unsafe_findings);
+                assert!(!result.rules.is_empty());
+                let block = &result.body["messages"][0]["content"][0];
+                let source = if block["type"] == "tool_result" {
+                    &block["content"][0]["source"]
+                } else {
+                    &block["source"]
+                };
+                assert_eq!(source["type"], "base64");
+                assert_eq!(
+                    source["media_type"],
+                    if *kind == "image" {
+                        "image/png"
+                    } else {
+                        "application/pdf"
+                    }
+                );
+                let bytes = base64::engine::general_purpose::STANDARD
+                    .decode(source["data"].as_str().unwrap())
+                    .unwrap();
+                assert!(
+                    e.inspect(&bytes, "fixture", false)
+                        .await
+                        .unwrap()
+                        .rules
+                        .is_empty()
+                );
+            }
+        }
+    }
+}

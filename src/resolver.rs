@@ -13,23 +13,41 @@ pub struct Resolver {
     pub file_api_key: Option<String>,
 }
 #[derive(Default)]
-struct Budget {
+pub(crate) struct Budget {
     count: usize,
+    #[cfg(test)]
+    url_calls: usize,
     bytes: usize,
     acquired: std::collections::HashMap<String, Vec<u8>>,
 }
 impl Budget {
-    fn begin(&mut self) -> Result<()> {
+    #[cfg(test)]
+    pub(crate) fn prefetched(url: &str, bytes: Vec<u8>) -> Self {
+        Self {
+            acquired: [(url.to_owned(), bytes)].into(),
+            ..Self::default()
+        }
+    }
+
+    pub(crate) fn begin(&mut self) -> Result<()> {
         self.count += 1;
         anyhow::ensure!(self.count <= 16, "attachment_count_limit");
         Ok(())
     }
-    fn charge(&mut self, bytes: usize) -> Result<()> {
+    pub(crate) fn charge(&mut self, bytes: usize) -> Result<()> {
         self.bytes += bytes;
         anyhow::ensure!(self.bytes <= 64 * 1024 * 1024, "attachment_total_limit");
         Ok(())
     }
-    async fn url(&mut self, url: &str) -> Result<Vec<u8>> {
+    #[cfg(test)]
+    pub(crate) fn url_calls(&self) -> usize {
+        self.url_calls
+    }
+    pub(crate) async fn url(&mut self, url: &str) -> Result<Vec<u8>> {
+        #[cfg(test)]
+        {
+            self.url_calls += 1;
+        }
         if let Some(bytes) = self.acquired.get(url) {
             return Ok(bytes.clone());
         }

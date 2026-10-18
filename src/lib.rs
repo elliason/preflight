@@ -1,8 +1,10 @@
+pub mod anthropic;
 pub mod attachments;
 pub mod cache;
 pub mod correlation;
 pub mod document;
 pub mod metrics;
+pub mod protocol;
 pub mod resolver;
 pub mod scanner;
 pub mod worker;

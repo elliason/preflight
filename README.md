@@ -8,8 +8,8 @@
                        │                                    │
  coding harness ──────►│  /v1/responses                     │
  (any supported        │  /v1/chat/completions              │────► underclass ────► model
-  OpenAI-compatible    │  /v1/models                        │
-  client)              │                                    │
+  OpenAI/Anthropic     │  /v1/models                        │
+  client)              │  /v1/messages · count_tokens       │
                        │  decode · inspect · redact/block   │
                        │  local OCR · content-addressed     │
                        │  cache · structured logging        │
@@ -25,7 +25,7 @@ Someone pastes an `.env` file? Detected credentials become stable placeholders a
 
 Coding agents read source files, shell output, screenshots, and documents. Secrets can arrive through any of them. preflight sits between the harness and [underclass](https://github.com/ghuntley/underclass), inspecting the outbound copy before inference starts:
 
-- **One base URL change** — keep the supported OpenAI HTTP endpoints, tool-call structure, session headers, and response streams.
+- **One base URL change** — keep the supported OpenAI and Anthropic HTTP endpoints, tool-call structure, session headers, and response streams.
 - **Redact by default** — replace detected secrets with `[REDACTED:rule-id]` so ordinary pasted-key incidents do not stop the agent.
 - **Attachments get inspected too** — decode images and PDFs locally; scan extracted text, metadata, barcodes, and OCR output.
 - **No repeated OCR tax** — identical attachments reuse completed inspection results while their scope and inspection profile remain the same.
@@ -77,7 +77,12 @@ Design decisions and their trade-offs live in [`docs/adr/`](docs/adr) — start 
 | `no-go` | Return HTTP 409 for any non-allowlisted finding. Nothing reaches underclass. The response contains opaque finding IDs, never the secret. |
 | `advisory` | Report findings and forward the original content. Useful for tuning; detected secrets can reach the model in this mode. |
 
-All modes reject acquisition or extraction failures. Inspection failures return `422`, malformed JSON `400`, body limits `413`, and deadline exhaustion `408`. Preflight-generated errors use static codes rather than matched content.
+Signed Anthropic thinking is never rewritten: findings in the signed group reject
+in `redact` and `no-go`; `advisory` forwards the original request. Anthropic policy
+rejections return `400` in the native error envelope instead of the OpenAI routes'
+`409`. Unsupported opaque blocks reject in every mode.
+
+All modes reject acquisition or extraction failures. Inspection failures return `422`, malformed JSON `400`, body limits `413`, and deadline exhaustion `408` on OpenAI routes or `504` on Anthropic routes. Preflight-generated errors use static codes rather than matched content.
 
 ## Configuration
 
@@ -92,6 +97,7 @@ preflight serve --config /path/to/config.toml
 | `bind` | `127.0.0.1:8081` | listen address |
 | `upstream` | `http://127.0.0.1:8080` | underclass base URL, without `/v1` |
 | `mode` | `redact` | enforcement policy |
+| `anthropic_upstream_auth` | `x-api-key` | replacement credential form on native routes: `x-api-key` or `bearer`; other values reject at load/reload |
 | `sandbox` | `true` | isolate attachment workers with Bubblewrap |
 | `allow_page_redaction` | `false` | permit blacking out a PDF page when a finding cannot be mapped to an OCR region |
 | `max_body_bytes` | `67108864` | maximum request body size: 64 MiB |
@@ -124,8 +130,8 @@ Runtime environment:
 | variable | purpose |
 |---|---|
 | `PREFLIGHT_CONFIG` | configuration path for `serve` |
-| `PREFLIGHT_CLIENT_KEY` | optional bearer credential required from clients |
-| `PREFLIGHT_UPSTREAM_KEY` | optional replacement credential sent to underclass |
+| `PREFLIGHT_CLIENT_KEY` | optional local credential: bearer on OpenAI routes; bearer or `x-api-key` on Anthropic routes |
+| `PREFLIGHT_UPSTREAM_KEY` | optional replacement credential: bearer on OpenAI routes; configured `anthropic_upstream_auth` form on Anthropic routes |
 | `PREFLIGHT_FILE_API_KEY` | separate credential for the configured file API |
 | `PREFLIGHT_CONTROL` | socket path for cache administration commands |
 | `RUST_LOG` | logging filter; output is structured JSON |
@@ -147,14 +153,106 @@ preflight cache purge [--scope SCOPE_ID] [--socket PATH]
 
 | route | auth | purpose |
 |---|---|---|
+| `POST /v1/messages` | bearer or `x-api-key`, if configured | inspect an Anthropic Messages request, then pass through JSON or SSE |
+| `POST /v1/messages/count_tokens` | bearer or `x-api-key`, if configured | inspect the same content before token counting |
 | `POST /v1/responses` | client key, if configured | inspect a Responses request, then stream through underclass |
 | `POST /v1/chat/completions` | client key, if configured | inspect a Chat Completions request, then stream through underclass |
-| `GET /v1/models` | client key, if configured | forward model discovery |
+| `GET /v1/models` | bearer or native `x-api-key`, if configured | forward validated native discovery queries; retain legacy bearer-only query discard |
 | `GET /healthz` | none | local liveness probe |
 | `GET /readyz` | none | readiness after startup toolchain checks |
 | `GET /metrics` | none | aggregate Prometheus counters and request-to-headers timings |
 
 Every handled response carries `x-request-id`, including blocked requests, authentication failures, model discovery, and unmatched routes. Completed inspections also attach `x-preflight-finding-count`. JSON logs correlate requests and safe finding IDs without recording prompts or matched secrets. Unknown routes are not pass-through routes.
+
+### Anthropic Messages coverage
+
+Messages and count-tokens accept no query or exactly `?beta=true`. Other queries
+reject. `anthropic-version` and syntactically validated, bounded `anthropic-beta`
+headers are preserved (at most 32 beta entries). Generated errors use Anthropic's
+`{"type":"error","error":{"type":"...","message":"..."}}` envelope with static
+`preflight:` messages and `x-should-retry: false` for deterministic failures.
+The complete request is inspected before any upstream bytes are sent;
+upstream JSON and SSE responses pass through unchanged, including unknown events.
+
+| request content | support |
+|---|---|
+| `system`, message strings, `text` blocks | inspect and redact editable text; reconstruct adjacent text parts |
+| `tool_use`, `server_tool_use`, `mcp_tool_use` inputs | inspect JSON values and valid nested JSON strings; identifiers and keys scan-only |
+| `tool_result` content | strings (including valid nested JSON), or text/image/document/search-result blocks |
+| `mcp_tool_result` content | strings (including valid nested JSON), or text-only block arrays |
+| tool definitions | custom and declared hosted families; descriptions editable; identifiers, schemas, limits, domains, and caller controls scan-only |
+| `cache_control` | preserved and scanned; surrounding content is still inspected |
+| `context_management` | scan-only `edits` with `clear_thinking_20251015` and `keep: "all"` |
+| `output_config` | scan-only `effort` (`low`, `medium`, `high`, `max`) |
+| request `thinking`, `metadata` | scan-only controls, including adaptive thinking/display and `user_id` |
+| signed `thinking` | preserve the whole group; findings block in enforcing modes; advisory forwards original bytes |
+| `image` | base64 JPEG/PNG or bounded URL acquisition; worker inspection and verified reconstruction; GIF/WebP reject |
+| `document` | base64 PDF, PDF URL, plain text, or text/image content blocks; nullable title/context editable when present; adjacent text reconstructed |
+| non-web-search text citations, `search_result` | visible cited text/title/source editable; numeric locations and linkage preserved |
+| web-fetch results | fetched documents and errors inspected under the matching result parent |
+| hosted web-search results and web-search citations | `web_search_result` and `web_search_result_location` reject by type pending the opaque-state policy |
+| code execution/bash/editor results | stdout/stderr/text and ordered editor lines inspected; return codes/locations preserved; editor views require text file type |
+| tool-search results | visible errors inspected; unresolved tool references reject |
+| `compaction` | nullable visible content inspected when present; undeclared continuity fields reject |
+| Files `file_id`, `container_upload`, output-file references | reject as unresolved references |
+| MCP listing, browser state, fallback, advisor results, unknown families | reject explicitly |
+| `redacted_thinking` and encrypted provider state | reject pending the [opaque-state decision](docs/adr/0007-anthropic-protocol-and-signed-state.md) |
+
+Hosted result children must match their parent; nested-only result and error types
+reject at message level. MCP results accept text-only content arrays. Nullable
+editor line/location fields are preserved. Replayed hosted web-search results and
+web-search citations reject in every mode until the opaque-state policy is
+decided: their API shapes require opaque `encrypted_content` and
+`encrypted_index`, respectively. Missing opaque fields do not bypass rejection.
+
+Base64 sources retain their shape after reconstruction; the returned bytes determine
+`media_type` (the worker rebuilds sanitized JPEG as PNG). URL sources use the shared
+HTTPS-only resolver with public-address checks, DNS pinning, no redirects or
+credentials, and bounded downloads. Every source occurrence counts toward the
+16-attachment / 64 MiB decoded request limit, including repeated URLs. Inspected
+URL bytes become inline sources in every native mode; advisory leaves visible
+text unchanged, but URL materialization changes request bytes even in advisory
+mode. URL documents must contain PDF bytes. Source control findings reject before
+URL acquisition in enforcing modes; encoded `data` is never scanned as text.
+No inference request is sent if acquisition, decoding, MIME validation, or worker
+inspection fails.
+
+Nested JSON strings that need redaction are re-serialized; extremely large
+integers can lose precision, as with the legacy walker.
+
+Unknown request fields also reject. This is limited protocol support, not complete
+Claude Code feature coverage: histories containing unsupported blocks remain
+blocked. Token counts describe the screened request and can change after redaction.
+Sanitized fixtures cover five requests captured from Claude Code 2.1.302 against
+a local stub: streamed text, a Read tool result, and signed-thinking replay.
+All five original bodies passed adapter inspection without changes. The capture
+observed no opaque blocks, model discovery, or count-tokens requests. Additional
+synthetic fixtures cover the content matrix on both native routes, including
+no-forward cases and generated canary/structure properties. Hosted-tool, media,
+and beta support has not been validated against additional client captures.
+
+Configure the same local key in the client's bearer or `x-api-key` header. Both
+headers may be supplied only with matching values; duplicate or conflicting
+credentials reject. When a local key is configured, an upstream key is required.
+Configuration load and reload reject a missing replacement and empty or invalid
+`PREFLIGHT_CLIENT_KEY` / `PREFLIGHT_UPSTREAM_KEY` header values. This also rejects
+the previously accepted OpenAI-only setup that forwarded the local bearer key
+upstream. The local credential is stripped
+and the replacement uses `anthropic_upstream_auth`: `x-api-key` (default) or
+`bearer`. Unknown auth forms reject during configuration load/reload.
+With neither key configured, one native credential can pass through. OpenAI
+routes retain their existing authentication, document walker, and query-discard
+behavior for valid configurations.
+
+Discovery compatibility change: `GET /v1/models` selects native semantics when
+`x-api-key`, `anthropic-version`, or `anthropic-beta` is present. Native discovery
+accepts `limit` (1–1000), one `before_id` or `after_id` cursor (bounded ASCII
+letters/digits/hyphens/underscores), and `beta=true`; it rejects unknown, duplicate,
+or encoded parameters and forwards the validated query unchanged. Bearer-only
+discovery without native headers retains its previous query-discard behavior.
+Unregistered `/v1/messages/*` routes return native `not_found_error` envelopes;
+they never forward. Individual `/v1/models/{id}` lookups are unsupported and
+return 404: a native envelope with native headers, otherwise an empty response.
 
 ### Correlation with underclass
 
@@ -412,7 +510,9 @@ devenv shell -- cargo run --locked --bin preflight-update-rules -- v8.30.1
 src/
   main.rs                  CLI, configuration, approval gate, proxy, streaming
   scanner.rs               embedded rules, carnet, detection, text redaction
-  document.rs              JSON traversal, nested arguments, source mapping
+  protocol.rs              typed routes and closed inspection plans
+  anthropic.rs             pure Messages and count-tokens classification
+  document.rs              shared inspection, legacy traversal, source mapping
   resolver.rs              attachment acquisition and reference materialization
   attachments.rs           worker orchestration, inspection, reconstruction checks
   worker.rs                typed worker protocol and coordinate transforms
@@ -425,6 +525,7 @@ tests/
   properties.rs            Hegel properties and regression fixtures
   integration.rs           document and HTTP integration tests
   differential.rs          comparison with Gitleaks
+  protocol.rs              Anthropic content regressions and Hegel properties
   common/                  generated image/PDF fixtures
 rules/                     explicit default rule profile
 vendor/gitleaks/            upstream database, license, and provenance

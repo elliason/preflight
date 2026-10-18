@@ -1,0 +1,366 @@
+{
+  "provenance": "Hand-reduced from isolated Claude Code 2.1.302 requests; all content is invented.",
+  "beta": "claude-code-20250219,interleaved-thinking-2025-05-14,thinking-token-count-2026-05-13,context-management-2025-06-27,prompt-caching-scope-2026-01-05,effort-2025-11-24,thinking-display-updates-2026-08-18",
+  "version": "2023-06-01",
+  "headers": {
+    "content-type": "application/json",
+    "anthropic-version": "2023-06-01",
+    "anthropic-beta": "claude-code-20250219,interleaved-thinking-2025-05-14,thinking-token-count-2026-05-13,context-management-2025-06-27,prompt-caching-scope-2026-01-05,effort-2025-11-24,thinking-display-updates-2026-08-18",
+    "authorization": "Bearer fake-local-key-not-a-secret"
+  },
+  "method": "POST",
+  "path": "/v1/messages",
+  "query": "beta=true",
+  "common": {
+    "model": "example-model",
+    "system": [
+      {
+        "type": "text",
+        "text": "Example instruction",
+        "cache_control": {
+          "type": "ephemeral"
+        }
+      }
+    ],
+    "tools": [
+      {
+        "name": "test_tool",
+        "description": "Run a test tool",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "file_path": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    ],
+    "metadata": {
+      "user_id": "example"
+    },
+    "max_tokens": 32,
+    "thinking": {
+      "type": "adaptive",
+      "display": "updates"
+    },
+    "context_management": {
+      "edits": [
+        {
+          "type": "clear_thinking_20251015",
+          "keep": "all"
+        }
+      ]
+    },
+    "output_config": {
+      "effort": "high"
+    },
+    "stream": true
+  },
+  "turns": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Say hello"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Say hello"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Hello"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run a test tool"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Say hello"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Hello"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run a test tool"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "tool_example",
+              "name": "test_tool",
+              "input": {
+                "file_path": "example.txt"
+              }
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "tool_use_id": "tool_example",
+              "content": "Example result",
+              "cache_control": {
+                "type": "ephemeral"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Say hello"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Hello"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run a test tool"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "tool_example",
+              "name": "test_tool",
+              "input": {
+                "file_path": "example.txt"
+              }
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "tool_use_id": "tool_example",
+              "content": "Example result",
+              "cache_control": {
+                "type": "ephemeral"
+              }
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Done"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Think about an example"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Say hello"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Hello"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run a test tool"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "tool_example",
+              "name": "test_tool",
+              "input": {
+                "file_path": "example.txt"
+              }
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "tool_use_id": "tool_example",
+              "content": "Example result",
+              "cache_control": {
+                "type": "ephemeral"
+              }
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "Done"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Think about an example"
+            }
+          ]
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "type": "thinking",
+              "thinking": "Example thought",
+              "signature": "fake-signature"
+            },
+            {
+              "type": "text",
+              "text": "Example answer"
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Continue"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stub_event_order": {
+    "text": [
+      "message_start",
+      "content_block_start:text",
+      "content_block_delta:text_delta",
+      "content_block_stop",
+      "message_delta:end_turn",
+      "message_stop"
+    ],
+    "tool": [
+      "message_start",
+      "content_block_start:tool_use",
+      "content_block_delta:input_json_delta",
+      "content_block_stop",
+      "message_delta:tool_use",
+      "message_stop"
+    ],
+    "thinking_then_text": [
+      "message_start",
+      "content_block_start:thinking",
+      "content_block_delta:thinking_delta",
+      "content_block_delta:signature_delta",
+      "content_block_stop",
+      "content_block_start:text",
+      "content_block_delta:text_delta",
+      "content_block_stop",
+      "message_delta:end_turn",
+      "message_stop"
+    ]
+  }
+}
